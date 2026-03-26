@@ -11,9 +11,9 @@ import EnvironmentData
 import DeviceFeature
 import BuildFeature
 import SettingsFeature
+import RuntimeFeature
 
 /// DI 조립 - Coordinator에서 ViewModel 생성 시 사용
-/// elecle-ios의 Component 패턴을 따라 전체 의존성 그래프를 명시적으로 조립
 @MainActor
 final class AppAssembly {
 
@@ -90,6 +90,10 @@ final class AppAssembly {
             folderId: defaultFolderId,
             isDriveConfigured: isDriveConfigured
         )
+    }
+
+    func runtimeViewModel() async throws -> RuntimeViewModel {
+        RuntimeViewModel(useCase: try await simulatorUseCase())
     }
 
     func settingsViewModel() -> SettingsViewModel {

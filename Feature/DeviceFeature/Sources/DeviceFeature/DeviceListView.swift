@@ -12,11 +12,12 @@ public struct DeviceListView: View {
     }
 
     public var body: some View {
-        HSplitView {
+        HStack(spacing: 0) {
             listPanel
-                .frame(minWidth: 250, idealWidth: 300)
+                .frame(width: 320)
+            Divider()
             detailPanel
-                .frame(minWidth: 350)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .sheet(isPresented: $showCreateSheet) {
             CreateDeviceSheet(viewModel: viewModel)

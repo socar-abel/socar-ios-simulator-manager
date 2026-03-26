@@ -15,4 +15,13 @@ public protocol SimulatorRepositoryInterface: Sendable {
     func launchApp(udid: String, bundleId: String) async throws
     func openURL(udid: String, url: String) async throws
     func openSimulatorApp() async throws
+
+    // 런타임 관리
+    func listInstalledRuntimes() async throws -> [InstalledRuntime]
+    func deleteRuntime(identifier: String) async throws
+    func downloadRuntime(platform: String) async throws
+
+    // 디스크
+    func devicesDiskUsageBytes() async throws -> Int64
+    func deleteUnavailableDevices() async throws
 }

@@ -69,4 +69,31 @@ public final class SimulatorUseCase<Dependency: SimulatorUseCaseDependency>: Sim
     public func openURL(udid: String, url: String) async throws {
         try await dependency.repository.openURL(udid: udid, url: url)
     }
+
+    // MARK: - Runtime Management
+
+    public func fetchInstalledRuntimes() async throws -> [InstalledRuntime] {
+        try await dependency.repository.listInstalledRuntimes()
+    }
+
+    public func deleteRuntime(identifier: String) async throws {
+        try await dependency.repository.deleteRuntime(identifier: identifier)
+    }
+
+    public func downloadRuntime(platform: String) async throws {
+        try await dependency.repository.downloadRuntime(platform: platform)
+    }
+
+    // MARK: - Disk
+
+    public func fetchDiskUsage() async throws -> DiskUsage {
+        let runtimes = try await dependency.repository.listInstalledRuntimes()
+        let runtimesBytes = runtimes.reduce(Int64(0)) { $0 + $1.sizeBytes }
+        let devicesBytes = try await dependency.repository.devicesDiskUsageBytes()
+        return DiskUsage(runtimesBytes: runtimesBytes, devicesBytes: devicesBytes, buildsBytes: 0)
+    }
+
+    public func deleteAllUnavailableDevices() async throws {
+        try await dependency.repository.deleteUnavailableDevices()
+    }
 }

@@ -1,6 +1,7 @@
 import SwiftUI
 import DeviceFeature
 import BuildFeature
+import RuntimeFeature
 
 struct MainView: View {
 
@@ -21,6 +22,8 @@ struct MainView: View {
                 .tag(AppRoute.devices)
             Label("빌드", systemImage: "shippingbox")
                 .tag(AppRoute.builds)
+            Label("런타임", systemImage: "cpu")
+                .tag(AppRoute.runtimes)
         }
         .listStyle(.sidebar)
     }
@@ -35,6 +38,10 @@ struct MainView: View {
         case .builds:
             if let vm = coordinator.buildListViewModel {
                 BuildListView(viewModel: vm)
+            }
+        case .runtimes:
+            if let vm = coordinator.runtimeViewModel {
+                RuntimeView(viewModel: vm)
             }
         }
     }

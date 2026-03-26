@@ -131,6 +131,83 @@ public final class SimulatorRepository<Dependency: SimulatorRepositoryDependency
             arguments: ["-a", "Simulator"]
         )
     }
+
+    // MARK: - Runtime Management
+
+    public func listInstalledRuntimes() async throws -> [InstalledRuntime] {
+        let result = try await dependency.shell.simctlArgs(["runtime", "list", "-j"])
+        guard result.isSuccess, let data = result.stdout.data(using: .utf8) else {
+            throw SimulatorRepositoryError.commandFailed(result.stderr)
+        }
+
+        let raw = try JSONDecoder().decode([String: SimctlRuntimeDetailDTO].self, from: data)
+        return raw.values
+            .filter { $0.platformIdentifier?.contains("iphonesimulator") == true }
+            .map { dto in
+                InstalledRuntime(
+                    identifier: dto.identifier,
+                    runtimeIdentifier: dto.runtimeIdentifier ?? "",
+                    version: dto.version ?? "",
+                    sizeBytes: dto.sizeBytes ?? 0,
+                    isDeletable: dto.deletable ?? false,
+                    state: dto.state ?? "Unknown",
+                    lastUsedAt: dto.lastUsedAt
+                )
+            }
+            .sorted { $0.version > $1.version }
+    }
+
+    public func deleteRuntime(identifier: String) async throws {
+        let result = try await dependency.shell.simctlArgs(["runtime", "delete", identifier])
+        guard result.isSuccess else {
+            throw SimulatorRepositoryError.commandFailed(result.stderr)
+        }
+    }
+
+    public func downloadRuntime(platform: String) async throws {
+        // xcodebuild -downloadPlatform iOS (장시간 소요)
+        let result = try await dependency.shell.run(
+            executable: "/usr/bin/xcodebuild",
+            arguments: ["-downloadPlatform", platform],
+            timeout: 3600  // 런타임 다운로드는 최대 1시간
+        )
+        guard result.isSuccess else {
+            throw SimulatorRepositoryError.commandFailed(result.stderr)
+        }
+    }
+
+    // MARK: - Disk
+
+    public func devicesDiskUsageBytes() async throws -> Int64 {
+        let devicesPath = NSHomeDirectory() + "/Library/Developer/CoreSimulator/Devices"
+        return directorySize(at: devicesPath)
+    }
+
+    public func deleteUnavailableDevices() async throws {
+        let result = try await dependency.shell.simctlArgs(["delete", "unavailable"])
+        guard result.isSuccess else {
+            throw SimulatorRepositoryError.commandFailed(result.stderr)
+        }
+    }
+
+    // MARK: - Private
+
+    private func directorySize(at path: String) -> Int64 {
+        let fm = FileManager.default
+        guard let enumerator = fm.enumerator(
+            at: URL(fileURLWithPath: path),
+            includingPropertiesForKeys: [.fileSizeKey],
+            options: [.skipsHiddenFiles]
+        ) else { return 0 }
+
+        var total: Int64 = 0
+        for case let url as URL in enumerator {
+            if let size = try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize {
+                total += Int64(size)
+            }
+        }
+        return total
+    }
 }
 
 public enum SimulatorRepositoryError: LocalizedError {
