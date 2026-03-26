@@ -11,20 +11,11 @@ let package = Package(
     targets: [
         // MARK: - Core
 
-        .target(
-            name: "ShellKit",
-            path: "Core/ShellKit/Sources/ShellKit"
-        ),
-        .target(
-            name: "RoutingKit",
-            path: "Core/RoutingKit/Sources/RoutingKit"
-        ),
-        .target(
-            name: "DesignKit",
-            path: "Core/DesignKit/Sources/DesignKit"
-        ),
+        .target(name: "Shell", path: "Core/Shell/Sources/Shell"),
+        .target(name: "Routing", path: "Core/Routing/Sources/Routing"),
+        .target(name: "Design", path: "Core/Design/Sources/Design"),
 
-        // MARK: - Domain
+        // MARK: - Domain (Interfaces + UseCases)
 
         .target(
             name: "SimulatorDomainInterface",
@@ -32,7 +23,7 @@ let package = Package(
         ),
         .target(
             name: "SimulatorDomain",
-            dependencies: ["SimulatorDomainInterface", "ShellKit"],
+            dependencies: ["SimulatorDomainInterface"],
             path: "Domain/SimulatorDomain/Sources/SimulatorDomain"
         ),
         .target(
@@ -46,38 +37,42 @@ let package = Package(
         ),
         .target(
             name: "EnvironmentDomain",
-            dependencies: ["ShellKit"],
             path: "Domain/EnvironmentDomain/Sources/EnvironmentDomain"
+        ),
+
+        // MARK: - Data (Repository Implementations)
+
+        .target(
+            name: "SimulatorData",
+            dependencies: ["SimulatorDomainInterface", "Shell"],
+            path: "Data/SimulatorData/Sources/SimulatorData"
+        ),
+        .target(
+            name: "BuildData",
+            dependencies: ["BuildDomainInterface"],
+            path: "Data/BuildData/Sources/BuildData"
+        ),
+        .target(
+            name: "EnvironmentData",
+            dependencies: ["EnvironmentDomain", "Shell"],
+            path: "Data/EnvironmentData/Sources/EnvironmentData"
         ),
 
         // MARK: - Feature
 
         .target(
             name: "DeviceFeature",
-            dependencies: [
-                "SimulatorDomainInterface",
-                "DesignKit",
-                "RoutingKit",
-            ],
+            dependencies: ["SimulatorDomainInterface", "Design", "Routing"],
             path: "Feature/DeviceFeature/Sources/DeviceFeature"
         ),
         .target(
             name: "BuildFeature",
-            dependencies: [
-                "BuildDomainInterface",
-                "SimulatorDomainInterface",
-                "DesignKit",
-                "RoutingKit",
-            ],
+            dependencies: ["BuildDomainInterface", "SimulatorDomainInterface", "Design", "Routing"],
             path: "Feature/BuildFeature/Sources/BuildFeature"
         ),
         .target(
             name: "SettingsFeature",
-            dependencies: [
-                "BuildDomainInterface",
-                "EnvironmentDomain",
-                "DesignKit",
-            ],
+            dependencies: ["BuildDomainInterface", "EnvironmentDomain", "Design"],
             path: "Feature/SettingsFeature/Sources/SettingsFeature"
         ),
 
@@ -86,15 +81,11 @@ let package = Package(
         .executableTarget(
             name: "App",
             dependencies: [
-                "RoutingKit",
-                "ShellKit",
-                "DesignKit",
-                "SimulatorDomain",
-                "BuildDomain",
-                "EnvironmentDomain",
-                "DeviceFeature",
-                "BuildFeature",
-                "SettingsFeature",
+                "Routing", "Shell", "Design",
+                "SimulatorDomain", "SimulatorData",
+                "BuildDomain", "BuildData",
+                "EnvironmentDomain", "EnvironmentData",
+                "DeviceFeature", "BuildFeature", "SettingsFeature",
             ],
             path: "App/Sources/App"
         ),

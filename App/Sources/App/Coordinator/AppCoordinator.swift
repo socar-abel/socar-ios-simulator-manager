@@ -1,5 +1,5 @@
 import SwiftUI
-import RoutingKit
+import Routing
 import EnvironmentDomain
 import DeviceFeature
 import BuildFeature

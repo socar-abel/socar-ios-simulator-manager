@@ -1,10 +1,13 @@
 import Foundation
-import ShellKit
+import Shell
 import SimulatorDomain
 import SimulatorDomainInterface
+import SimulatorData
 import BuildDomain
 import BuildDomainInterface
+import BuildData
 import EnvironmentDomain
+import EnvironmentData
 import DeviceFeature
 import BuildFeature
 import SettingsFeature
@@ -55,10 +58,8 @@ final class AppAssembly {
         return BuildUseCase(dependency: component)
     }
 
-    /// Google Drive 미설정 시에도 로컬 빌드 관리가 가능한 UseCase
     func buildUseCaseWithFallback() throws -> any BuildUseCaseInterface {
         if let useCase = try buildUseCase() { return useCase }
-        // Drive 미설정 시 빈 repo 사용 (로컬 기능만 동작)
         let component = BuildUseCaseComponent(
             buildRepository: NullBuildRepository(),
             fileRepository: fileRepository
@@ -69,7 +70,8 @@ final class AppAssembly {
     // MARK: - Environment
 
     func environmentCheckUseCase() -> EnvironmentCheckUseCase {
-        EnvironmentCheckUseCase()
+        let repository = EnvironmentRepository()
+        return EnvironmentCheckUseCase(repository: repository)
     }
 
     // MARK: - ViewModels

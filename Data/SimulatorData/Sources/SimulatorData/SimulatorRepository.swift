@@ -1,6 +1,6 @@
 import Foundation
 import SimulatorDomainInterface
-import ShellKit
+import Shell
 
 public protocol SimulatorRepositoryDependency {
     var shell: ShellService { get }

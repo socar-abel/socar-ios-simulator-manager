@@ -1,6 +1,6 @@
 import SwiftUI
 import SimulatorDomainInterface
-import DesignKit
+import Design
 
 public struct DeviceListView: View {
 

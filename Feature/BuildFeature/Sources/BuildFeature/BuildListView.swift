@@ -1,7 +1,7 @@
 import SwiftUI
 import BuildDomainInterface
 import SimulatorDomainInterface
-import DesignKit
+import Design
 
 public struct BuildListView: View {
 
