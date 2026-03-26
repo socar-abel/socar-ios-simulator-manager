@@ -116,7 +116,7 @@ public struct IOSVersionView: View {
                     Button {
                         Task { await viewModel.downloadLatestIOSVersion() }
                     } label: {
-                        Label("iOS iOS 버전 다운로드", systemImage: "arrow.down.circle")
+                        Label("최신 버전 다운로드", systemImage: "arrow.down.circle")
                     }
                     .buttonStyle(.bordered)
                 }

@@ -63,7 +63,7 @@ public final class IOSVersionViewModel {
 
         do {
             try await useCase.downloadIOSVersion(platform: "iOS")
-            successMessage = "iOS iOS 버전 다운로드가 완료되었습니다."
+            successMessage = "최신 iOS 버전 다운로드가 완료되었습니다."
             await refreshAll()
         } catch {
             errorMessage = "iOS 버전 다운로드 실패: \(error.localizedDescription)"
