@@ -1,6 +1,6 @@
 import Foundation
 
-public struct SimulatorRuntime: Identifiable, Hashable, Sendable {
+public struct SimulatorIOSVersion: Identifiable, Hashable, Sendable {
     public let identifier: String
     public let name: String
     public let version: String

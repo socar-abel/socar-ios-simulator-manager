@@ -8,7 +8,7 @@ struct CreateDeviceSheet: View {
 
     @State private var deviceName = ""
     @State private var selectedDeviceType: SimulatorDeviceType?
-    @State private var selectedRuntime: SimulatorRuntime?
+    @State private var selectedRuntime: SimulatorIOSVersion?
     @State private var isCreating = false
     @State private var errorMessage: String?
 
@@ -16,7 +16,7 @@ struct CreateDeviceSheet: View {
         viewModel.deviceTypes.filter(\.isIPhone)
     }
 
-    private var iOSRuntimes: [SimulatorRuntime] {
+    private var iOSRuntimes: [SimulatorIOSVersion] {
         viewModel.runtimes.filter(\.isIOS)
     }
 
@@ -37,8 +37,8 @@ struct CreateDeviceSheet: View {
                         ForEach(iPhoneTypes) { Text($0.name).tag($0 as SimulatorDeviceType?) }
                     }
                     Picker("iOS 버전", selection: $selectedRuntime) {
-                        Text("선택하세요").tag(nil as SimulatorRuntime?)
-                        ForEach(iOSRuntimes) { Text("\($0.name) (\($0.version))").tag($0 as SimulatorRuntime?) }
+                        Text("선택하세요").tag(nil as SimulatorIOSVersion?)
+                        ForEach(iOSRuntimes) { Text("\($0.name) (\($0.version))").tag($0 as SimulatorIOSVersion?) }
                     }
                     TextField("디바이스 이름 (선택)", text: $deviceName)
                         .textFieldStyle(.roundedBorder)

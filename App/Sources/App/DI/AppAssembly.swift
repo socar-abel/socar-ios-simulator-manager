@@ -11,7 +11,7 @@ import EnvironmentData
 import DeviceFeature
 import BuildFeature
 import SettingsFeature
-import RuntimeFeature
+import IOSVersionFeature
 
 /// DI 조립 - Coordinator에서 ViewModel 생성 시 사용
 @MainActor
@@ -92,8 +92,8 @@ final class AppAssembly {
         )
     }
 
-    func runtimeViewModel() async throws -> RuntimeViewModel {
-        RuntimeViewModel(useCase: try await simulatorUseCase())
+    func iosVersionViewModel() async throws -> IOSVersionViewModel {
+        IOSVersionViewModel(useCase: try await simulatorUseCase())
     }
 
     func settingsViewModel() -> SettingsViewModel {

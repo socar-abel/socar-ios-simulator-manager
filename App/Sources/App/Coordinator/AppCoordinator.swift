@@ -4,12 +4,12 @@ import EnvironmentDomain
 import DeviceFeature
 import BuildFeature
 import SettingsFeature
-import RuntimeFeature
+import IOSVersionFeature
 
 enum AppRoute: Hashable {
     case devices
     case builds
-    case runtimes
+    case iosVersions
 }
 
 @Observable
@@ -26,7 +26,7 @@ final class AppCoordinator {
     private(set) var deviceListViewModel: DeviceListViewModel?
     private(set) var buildListViewModel: BuildListViewModel?
     private(set) var settingsViewModel: SettingsViewModel?
-    private(set) var runtimeViewModel: RuntimeViewModel?
+    private(set) var iosVersionViewModel: IOSVersionViewModel?
 
     private let assembly: AppAssembly
 
@@ -45,7 +45,7 @@ final class AppCoordinator {
             deviceListViewModel = try await assembly.deviceListViewModel()
             buildListViewModel = try await assembly.buildListViewModel()
             settingsViewModel = assembly.settingsViewModel()
-            runtimeViewModel = try await assembly.runtimeViewModel()
+            iosVersionViewModel = try await assembly.iosVersionViewModel()
             isReady = true
         } catch {
             environmentStatus = EnvironmentStatus(

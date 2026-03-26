@@ -1,7 +1,7 @@
 import Foundation
 
 /// simctl runtime list에서 가져오는 설치된 런타임 상세 정보
-public struct InstalledRuntime: Identifiable, Hashable, Sendable {
+public struct InstalledIOSVersion: Identifiable, Hashable, Sendable {
     public let identifier: String
     public let runtimeIdentifier: String
     public let version: String

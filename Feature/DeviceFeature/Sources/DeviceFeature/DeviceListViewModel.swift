@@ -5,7 +5,7 @@ import SimulatorDomainInterface
 public final class DeviceListViewModel {
 
     public private(set) var devices: [SimulatorDevice] = []
-    public private(set) var runtimes: [SimulatorRuntime] = []
+    public private(set) var runtimes: [SimulatorIOSVersion] = []
     public private(set) var deviceTypes: [SimulatorDeviceType] = []
     public private(set) var isLoading = false
     public var errorMessage: String?
@@ -30,7 +30,7 @@ public final class DeviceListViewModel {
 
         do {
             async let d = useCase.fetchDevices()
-            async let r = useCase.fetchRuntimes()
+            async let r = useCase.fetchIOSVersions()
             async let t = useCase.fetchDeviceTypes()
             devices = try await d
             runtimes = try await r
@@ -74,7 +74,7 @@ public final class DeviceListViewModel {
     public func createDevice(
         name: String,
         deviceType: SimulatorDeviceType,
-        runtime: SimulatorRuntime
+        runtime: SimulatorIOSVersion
     ) async throws {
         _ = try await useCase.createDevice(
             name: name,

@@ -2,13 +2,13 @@ import SwiftUI
 import SimulatorDomainInterface
 import Design
 
-public struct RuntimeView: View {
+public struct IOSVersionView: View {
 
-    @Bindable var viewModel: RuntimeViewModel
+    @Bindable var viewModel: IOSVersionViewModel
 
-    @State private var runtimeToDelete: InstalledRuntime?
+    @State private var versionToDelete: InstalledIOSVersion?
 
-    public init(viewModel: RuntimeViewModel) {
+    public init(viewModel: IOSVersionViewModel) {
         self.viewModel = viewModel
     }
 
@@ -17,7 +17,7 @@ public struct RuntimeView: View {
             VStack(alignment: .leading, spacing: 24) {
                 diskUsageSection
                 Divider()
-                runtimesSection
+                iosVersionsSection
                 Divider()
                 cleanupSection
 
@@ -32,22 +32,22 @@ public struct RuntimeView: View {
         }
         .task { await viewModel.onAppear() }
         .confirmationDialog(
-            "런타임을 삭제하시겠습니까?",
+            "iOS 버전을 삭제하시겠습니까?",
             isPresented: .init(
-                get: { runtimeToDelete != nil },
-                set: { if !$0 { runtimeToDelete = nil } }
+                get: { versionToDelete != nil },
+                set: { if !$0 { versionToDelete = nil } }
             ),
             titleVisibility: .visible
         ) {
-            if let runtime = runtimeToDelete {
+            if let runtime = versionToDelete {
                 Button("삭제 (\(runtime.displaySize))", role: .destructive) {
-                    Task { await viewModel.deleteRuntime(runtime) }
-                    runtimeToDelete = nil
+                    Task { await viewModel.deleteIOSVersion(runtime) }
+                    versionToDelete = nil
                 }
             }
         } message: {
-            if let runtime = runtimeToDelete {
-                Text("\(runtime.displayName) (\(runtime.displaySize))을(를) 삭제합니다. 이 런타임을 사용하는 디바이스도 사용할 수 없게 됩니다.")
+            if let runtime = versionToDelete {
+                Text("\(runtime.displayName) (\(runtime.displaySize))을(를) 삭제합니다. 이 iOS 버전을 사용하는 디바이스도 사용할 수 없게 됩니다.")
             }
         }
     }
@@ -60,7 +60,7 @@ public struct RuntimeView: View {
 
             if let disk = viewModel.diskUsage {
                 HStack(spacing: 24) {
-                    diskItem(label: "런타임", value: disk.runtimesDisplay, icon: "cpu", color: .blue)
+                    diskItem(label: "iOS 버전", value: disk.iosVersionsDisplay, icon: "cpu", color: .blue)
                     diskItem(label: "디바이스", value: disk.devicesDisplay, icon: "iphone", color: .green)
                     diskItem(label: "합계", value: disk.totalDisplay, icon: "externaldrive", color: .orange)
                 }
@@ -71,7 +71,7 @@ public struct RuntimeView: View {
                     HStack(spacing: 2) {
                         Rectangle()
                             .fill(.blue)
-                            .frame(width: geo.size.width * CGFloat(disk.runtimesBytes) / CGFloat(total))
+                            .frame(width: geo.size.width * CGFloat(disk.iosVersionsBytes) / CGFloat(total))
                         Rectangle()
                             .fill(.green)
                             .frame(width: geo.size.width * CGFloat(disk.devicesBytes) / CGFloat(total))
@@ -102,10 +102,10 @@ public struct RuntimeView: View {
 
     // MARK: - Runtimes
 
-    private var runtimesSection: some View {
+    private var iosVersionsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("설치된 런타임").font(.headline)
+                Text("설치된 iOS 버전").font(.headline)
                 Spacer()
                 if viewModel.isDownloading {
                     HStack(spacing: 6) {
@@ -114,32 +114,32 @@ public struct RuntimeView: View {
                     }
                 } else {
                     Button {
-                        Task { await viewModel.downloadiOSRuntime() }
+                        Task { await viewModel.downloadLatestIOSVersion() }
                     } label: {
-                        Label("iOS 런타임 다운로드", systemImage: "arrow.down.circle")
+                        Label("iOS iOS 버전 다운로드", systemImage: "arrow.down.circle")
                     }
                     .buttonStyle(.bordered)
                 }
             }
 
-            if viewModel.installedRuntimes.isEmpty && !viewModel.isLoading {
+            if viewModel.installedIOSVersions.isEmpty && !viewModel.isLoading {
                 VStack(spacing: 8) {
                     Image(systemName: "cpu").font(.largeTitle).foregroundStyle(.secondary)
-                    Text("설치된 iOS 런타임이 없습니다").foregroundStyle(.secondary)
-                    Text("런타임을 다운로드하면 시뮬레이터 디바이스를 생성할 수 있습니다.")
+                    Text("설치된 iOS iOS 버전이 없습니다").foregroundStyle(.secondary)
+                    Text("iOS 버전을 다운로드하면 시뮬레이터 디바이스를 생성할 수 있습니다.")
                         .font(.caption).foregroundStyle(.tertiary)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 24)
             } else {
-                ForEach(viewModel.installedRuntimes) { runtime in
+                ForEach(viewModel.installedIOSVersions) { runtime in
                     runtimeRow(runtime)
                 }
             }
         }
     }
 
-    private func runtimeRow(_ runtime: InstalledRuntime) -> some View {
+    private func runtimeRow(_ runtime: InstalledIOSVersion) -> some View {
         HStack(spacing: 12) {
             Image(systemName: "cpu")
                 .font(.title2)
@@ -165,7 +165,7 @@ public struct RuntimeView: View {
 
             if runtime.isDeletable {
                 Button {
-                    runtimeToDelete = runtime
+                    versionToDelete = runtime
                 } label: {
                     Image(systemName: "trash").foregroundStyle(.red)
                 }
@@ -193,7 +193,7 @@ public struct RuntimeView: View {
             }
             .buttonStyle(.bordered)
 
-            Text("런타임이 삭제되어 더 이상 사용할 수 없는 디바이스를 일괄 정리합니다.")
+            Text("iOS 버전이 삭제되어 더 이상 사용할 수 없는 디바이스를 일괄 정리합니다.")
                 .font(.caption).foregroundStyle(.secondary)
         }
     }

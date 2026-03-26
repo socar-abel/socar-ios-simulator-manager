@@ -19,11 +19,11 @@ struct SimctlDeviceDTO: Codable {
 
 // MARK: - Runtimes
 
-struct SimctlRuntimesResponse: Codable {
-    let runtimes: [SimctlRuntimeDTO]
+struct SimctlIOSVersionsResponse: Codable {
+    let runtimes: [SimctlIOSVersionDTO]
 }
 
-struct SimctlRuntimeDTO: Codable {
+struct SimctlIOSVersionDTO: Codable {
     let identifier: String
     let name: String
     let version: String
@@ -45,7 +45,7 @@ struct SimctlDeviceTypeDTO: Codable {
 
 // MARK: - Runtime Detail (simctl runtime list -j)
 
-struct SimctlRuntimeDetailDTO: Codable {
+struct SimctlIOSVersionDetailDTO: Codable {
     let identifier: String
     let runtimeIdentifier: String?
     let version: String?

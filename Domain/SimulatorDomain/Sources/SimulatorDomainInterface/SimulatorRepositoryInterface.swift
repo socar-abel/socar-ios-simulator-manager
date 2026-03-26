@@ -3,7 +3,7 @@ import Foundation
 /// Repository 프로토콜 - UseCase에서 사용, Data 레이어에서 구현
 public protocol SimulatorRepositoryInterface: Sendable {
     func listDevices() async throws -> [SimulatorDevice]
-    func listRuntimes() async throws -> [SimulatorRuntime]
+    func listIOSVersions() async throws -> [SimulatorIOSVersion]
     func listDeviceTypes() async throws -> [SimulatorDeviceType]
 
     func createDevice(name: String, typeIdentifier: String, runtimeIdentifier: String) async throws -> String
@@ -16,10 +16,10 @@ public protocol SimulatorRepositoryInterface: Sendable {
     func openURL(udid: String, url: String) async throws
     func openSimulatorApp() async throws
 
-    // 런타임 관리
-    func listInstalledRuntimes() async throws -> [InstalledRuntime]
-    func deleteRuntime(identifier: String) async throws
-    func downloadRuntime(platform: String) async throws
+    // iOS 버전 관리
+    func listInstalledIOSVersions() async throws -> [InstalledIOSVersion]
+    func deleteIOSVersion(identifier: String) async throws
+    func downloadIOSVersion(platform: String) async throws
 
     // 디스크
     func devicesDiskUsageBytes() async throws -> Int64

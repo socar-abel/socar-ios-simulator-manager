@@ -38,15 +38,15 @@ public final class SimulatorRepository<Dependency: SimulatorRepositoryDependency
         return allDevices.sorted { $0.name < $1.name }
     }
 
-    public func listRuntimes() async throws -> [SimulatorRuntime] {
+    public func listIOSVersions() async throws -> [SimulatorIOSVersion] {
         let result = try await dependency.shell.simctl("list", "runtimes", "--json")
         guard result.isSuccess, let data = result.stdout.data(using: .utf8) else {
             return []
         }
-        let response = try JSONDecoder().decode(SimctlRuntimesResponse.self, from: data)
+        let response = try JSONDecoder().decode(SimctlIOSVersionsResponse.self, from: data)
         return response.runtimes
             .filter { $0.isAvailable }
-            .map { SimulatorRuntime(
+            .map { SimulatorIOSVersion(
                 identifier: $0.identifier,
                 name: $0.name,
                 version: $0.version,
@@ -134,17 +134,17 @@ public final class SimulatorRepository<Dependency: SimulatorRepositoryDependency
 
     // MARK: - Runtime Management
 
-    public func listInstalledRuntimes() async throws -> [InstalledRuntime] {
+    public func listInstalledIOSVersions() async throws -> [InstalledIOSVersion] {
         let result = try await dependency.shell.simctlArgs(["runtime", "list", "-j"])
         guard result.isSuccess, let data = result.stdout.data(using: .utf8) else {
             throw SimulatorRepositoryError.commandFailed(result.stderr)
         }
 
-        let raw = try JSONDecoder().decode([String: SimctlRuntimeDetailDTO].self, from: data)
+        let raw = try JSONDecoder().decode([String: SimctlIOSVersionDetailDTO].self, from: data)
         return raw.values
             .filter { $0.platformIdentifier?.contains("iphonesimulator") == true }
             .map { dto in
-                InstalledRuntime(
+                InstalledIOSVersion(
                     identifier: dto.identifier,
                     runtimeIdentifier: dto.runtimeIdentifier ?? "",
                     version: dto.version ?? "",
@@ -157,19 +157,19 @@ public final class SimulatorRepository<Dependency: SimulatorRepositoryDependency
             .sorted { $0.version > $1.version }
     }
 
-    public func deleteRuntime(identifier: String) async throws {
+    public func deleteIOSVersion(identifier: String) async throws {
         let result = try await dependency.shell.simctlArgs(["runtime", "delete", identifier])
         guard result.isSuccess else {
             throw SimulatorRepositoryError.commandFailed(result.stderr)
         }
     }
 
-    public func downloadRuntime(platform: String) async throws {
+    public func downloadIOSVersion(platform: String) async throws {
         // xcodebuild -downloadPlatform iOS (장시간 소요)
         let result = try await dependency.shell.run(
             executable: "/usr/bin/xcodebuild",
             arguments: ["-downloadPlatform", platform],
-            timeout: 3600  // 런타임 다운로드는 최대 1시간
+            timeout: 3600  // iOS 버전 다운로드는 최대 1시간
         )
         guard result.isSuccess else {
             throw SimulatorRepositoryError.commandFailed(result.stderr)

@@ -3,10 +3,10 @@ import Foundation
 /// UseCase 프로토콜 - Feature 레이어에서 이 인터페이스에만 의존
 public protocol SimulatorUseCaseInterface: Sendable {
     func fetchDevices() async throws -> [SimulatorDevice]
-    func fetchRuntimes() async throws -> [SimulatorRuntime]
+    func fetchIOSVersions() async throws -> [SimulatorIOSVersion]
     func fetchDeviceTypes() async throws -> [SimulatorDeviceType]
 
-    func createDevice(name: String, deviceType: SimulatorDeviceType, runtime: SimulatorRuntime) async throws -> String
+    func createDevice(name: String, deviceType: SimulatorDeviceType, runtime: SimulatorIOSVersion) async throws -> String
     func bootDevice(udid: String) async throws
     func shutdownDevice(udid: String) async throws
     func deleteDevice(udid: String) async throws
@@ -15,10 +15,10 @@ public protocol SimulatorUseCaseInterface: Sendable {
     func launchApp(udid: String, bundleId: String) async throws
     func openURL(udid: String, url: String) async throws
 
-    // 런타임 관리
-    func fetchInstalledRuntimes() async throws -> [InstalledRuntime]
-    func deleteRuntime(identifier: String) async throws
-    func downloadRuntime(platform: String) async throws
+    // iOS 버전 관리
+    func fetchInstalledIOSVersions() async throws -> [InstalledIOSVersion]
+    func deleteIOSVersion(identifier: String) async throws
+    func downloadIOSVersion(platform: String) async throws
 
     // 디스크
     func fetchDiskUsage() async throws -> DiskUsage

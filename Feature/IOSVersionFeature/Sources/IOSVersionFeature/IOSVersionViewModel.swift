@@ -2,9 +2,9 @@ import Foundation
 import SimulatorDomainInterface
 
 @Observable
-public final class RuntimeViewModel {
+public final class IOSVersionViewModel {
 
-    public private(set) var installedRuntimes: [InstalledRuntime] = []
+    public private(set) var installedIOSVersions: [InstalledIOSVersion] = []
     public private(set) var diskUsage: DiskUsage?
     public private(set) var isLoading = false
     public private(set) var isDownloading = false
@@ -29,18 +29,18 @@ public final class RuntimeViewModel {
         defer { isLoading = false }
 
         do {
-            async let runtimes = useCase.fetchInstalledRuntimes()
+            async let runtimes = useCase.fetchInstalledIOSVersions()
             async let disk = useCase.fetchDiskUsage()
-            installedRuntimes = try await runtimes
+            installedIOSVersions = try await runtimes
             diskUsage = try await disk
         } catch {
             errorMessage = error.localizedDescription
         }
     }
 
-    public func deleteRuntime(_ runtime: InstalledRuntime) async {
+    public func deleteIOSVersion(_ runtime: InstalledIOSVersion) async {
         guard runtime.isDeletable else {
-            errorMessage = "이 런타임은 삭제할 수 없습니다."
+            errorMessage = "이 iOS 버전은 삭제할 수 없습니다."
             return
         }
         isDeleting = true
@@ -48,25 +48,25 @@ public final class RuntimeViewModel {
         defer { isDeleting = false }
 
         do {
-            try await useCase.deleteRuntime(identifier: runtime.identifier)
-            successMessage = "\(runtime.displayName) 런타임이 삭제되었습니다."
+            try await useCase.deleteIOSVersion(identifier: runtime.identifier)
+            successMessage = "\(runtime.displayName) iOS 버전이 삭제되었습니다."
             await refreshAll()
         } catch {
             errorMessage = error.localizedDescription
         }
     }
 
-    public func downloadiOSRuntime() async {
+    public func downloadLatestIOSVersion() async {
         isDownloading = true
         errorMessage = nil
         defer { isDownloading = false }
 
         do {
-            try await useCase.downloadRuntime(platform: "iOS")
-            successMessage = "iOS 런타임 다운로드가 완료되었습니다."
+            try await useCase.downloadIOSVersion(platform: "iOS")
+            successMessage = "iOS iOS 버전 다운로드가 완료되었습니다."
             await refreshAll()
         } catch {
-            errorMessage = "런타임 다운로드 실패: \(error.localizedDescription)"
+            errorMessage = "iOS 버전 다운로드 실패: \(error.localizedDescription)"
         }
     }
 

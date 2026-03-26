@@ -76,9 +76,9 @@ let package = Package(
             path: "Feature/SettingsFeature/Sources/SettingsFeature"
         ),
         .target(
-            name: "RuntimeFeature",
+            name: "IOSVersionFeature",
             dependencies: ["SimulatorDomainInterface", "Design"],
-            path: "Feature/RuntimeFeature/Sources/RuntimeFeature"
+            path: "Feature/IOSVersionFeature/Sources/IOSVersionFeature"
         ),
 
         // MARK: - App
@@ -90,7 +90,7 @@ let package = Package(
                 "SimulatorDomain", "SimulatorData",
                 "BuildDomain", "BuildData",
                 "EnvironmentDomain", "EnvironmentData",
-                "DeviceFeature", "BuildFeature", "SettingsFeature", "RuntimeFeature",
+                "DeviceFeature", "BuildFeature", "SettingsFeature", "IOSVersionFeature",
             ],
             path: "App/Sources/App"
         ),

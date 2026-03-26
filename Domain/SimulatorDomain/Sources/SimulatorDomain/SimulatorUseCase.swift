@@ -17,8 +17,8 @@ public final class SimulatorUseCase<Dependency: SimulatorUseCaseDependency>: Sim
         try await dependency.repository.listDevices()
     }
 
-    public func fetchRuntimes() async throws -> [SimulatorRuntime] {
-        try await dependency.repository.listRuntimes()
+    public func fetchIOSVersions() async throws -> [SimulatorIOSVersion] {
+        try await dependency.repository.listIOSVersions()
     }
 
     public func fetchDeviceTypes() async throws -> [SimulatorDeviceType] {
@@ -28,7 +28,7 @@ public final class SimulatorUseCase<Dependency: SimulatorUseCaseDependency>: Sim
     public func createDevice(
         name: String,
         deviceType: SimulatorDeviceType,
-        runtime: SimulatorRuntime
+        runtime: SimulatorIOSVersion
     ) async throws -> String {
         try await dependency.repository.createDevice(
             name: name,
@@ -72,25 +72,25 @@ public final class SimulatorUseCase<Dependency: SimulatorUseCaseDependency>: Sim
 
     // MARK: - Runtime Management
 
-    public func fetchInstalledRuntimes() async throws -> [InstalledRuntime] {
-        try await dependency.repository.listInstalledRuntimes()
+    public func fetchInstalledIOSVersions() async throws -> [InstalledIOSVersion] {
+        try await dependency.repository.listInstalledIOSVersions()
     }
 
-    public func deleteRuntime(identifier: String) async throws {
-        try await dependency.repository.deleteRuntime(identifier: identifier)
+    public func deleteIOSVersion(identifier: String) async throws {
+        try await dependency.repository.deleteIOSVersion(identifier: identifier)
     }
 
-    public func downloadRuntime(platform: String) async throws {
-        try await dependency.repository.downloadRuntime(platform: platform)
+    public func downloadIOSVersion(platform: String) async throws {
+        try await dependency.repository.downloadIOSVersion(platform: platform)
     }
 
     // MARK: - Disk
 
     public func fetchDiskUsage() async throws -> DiskUsage {
-        let runtimes = try await dependency.repository.listInstalledRuntimes()
-        let runtimesBytes = runtimes.reduce(Int64(0)) { $0 + $1.sizeBytes }
+        let runtimes = try await dependency.repository.listInstalledIOSVersions()
+        let iosVersionsBytes = runtimes.reduce(Int64(0)) { $0 + $1.sizeBytes }
         let devicesBytes = try await dependency.repository.devicesDiskUsageBytes()
-        return DiskUsage(runtimesBytes: runtimesBytes, devicesBytes: devicesBytes, buildsBytes: 0)
+        return DiskUsage(iosVersionsBytes: iosVersionsBytes, devicesBytes: devicesBytes, buildsBytes: 0)
     }
 
     public func deleteAllUnavailableDevices() async throws {
