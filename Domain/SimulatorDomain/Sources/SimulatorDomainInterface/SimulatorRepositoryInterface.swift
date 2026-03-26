@@ -18,6 +18,7 @@ public protocol SimulatorRepositoryInterface: Sendable {
 
     // iOS 버전 관리
     func listInstalledIOSVersions() async throws -> [InstalledIOSVersion]
+    func listDownloadableIOSVersions() async throws -> [DownloadableIOSVersion]
     func deleteIOSVersion(identifier: String) async throws
     func downloadIOSVersion(platform: String) async throws
 

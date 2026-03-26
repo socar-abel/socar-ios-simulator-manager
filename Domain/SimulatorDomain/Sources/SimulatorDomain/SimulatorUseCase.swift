@@ -76,6 +76,14 @@ public final class SimulatorUseCase<Dependency: SimulatorUseCaseDependency>: Sim
         try await dependency.repository.listInstalledIOSVersions()
     }
 
+    public func fetchDownloadableIOSVersions() async throws -> [DownloadableIOSVersion] {
+        let installed = try await dependency.repository.listInstalledIOSVersions()
+        let installedNames = Set(installed.map { $0.displayName })
+        let all = try await dependency.repository.listDownloadableIOSVersions()
+        // 이미 설치된 버전 제외, beta 제외, iOS만
+        return all.filter { !installedNames.contains($0.shortName) && !$0.isBeta }
+    }
+
     public func deleteIOSVersion(identifier: String) async throws {
         try await dependency.repository.deleteIOSVersion(identifier: identifier)
     }

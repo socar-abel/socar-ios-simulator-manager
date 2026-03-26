@@ -17,6 +17,7 @@ public protocol SimulatorUseCaseInterface: Sendable {
 
     // iOS 버전 관리
     func fetchInstalledIOSVersions() async throws -> [InstalledIOSVersion]
+    func fetchDownloadableIOSVersions() async throws -> [DownloadableIOSVersion]
     func deleteIOSVersion(identifier: String) async throws
     func downloadIOSVersion(platform: String) async throws
 

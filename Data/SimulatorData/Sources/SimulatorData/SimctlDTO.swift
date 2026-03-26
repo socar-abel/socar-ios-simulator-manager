@@ -55,3 +55,17 @@ struct SimctlIOSVersionDetailDTO: Codable {
     let lastUsedAt: String?
     let platformIdentifier: String?
 }
+
+// MARK: - Apple CDN Downloadable Index
+
+struct DVTDownloadableIndex: Codable {
+    let downloadables: [DVTDownloadableItem]
+}
+
+struct DVTDownloadableItem: Codable {
+    let name: String
+    let version: String
+    let fileSize: Int64
+    let source: String?
+    let contentType: String?
+}

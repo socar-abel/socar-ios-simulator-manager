@@ -17,7 +17,9 @@ public struct IOSVersionView: View {
             VStack(alignment: .leading, spacing: 24) {
                 diskUsageSection
                 Divider()
-                iosVersionsSection
+                installedSection
+                Divider()
+                downloadableSection
                 Divider()
                 cleanupSection
 
@@ -39,15 +41,15 @@ public struct IOSVersionView: View {
             ),
             titleVisibility: .visible
         ) {
-            if let runtime = versionToDelete {
-                Button("삭제 (\(runtime.displaySize))", role: .destructive) {
-                    Task { await viewModel.deleteIOSVersion(runtime) }
+            if let version = versionToDelete {
+                Button("삭제 (\(version.displaySize))", role: .destructive) {
+                    Task { await viewModel.deleteIOSVersion(version) }
                     versionToDelete = nil
                 }
             }
         } message: {
-            if let runtime = versionToDelete {
-                Text("\(runtime.displayName) (\(runtime.displaySize))을(를) 삭제합니다. 이 iOS 버전을 사용하는 디바이스도 사용할 수 없게 됩니다.")
+            if let version = versionToDelete {
+                Text("\(version.displayName) (\(version.displaySize))을(를) 삭제합니다. 이 버전을 사용하는 디바이스도 사용할 수 없게 됩니다.")
             }
         }
     }
@@ -65,7 +67,6 @@ public struct IOSVersionView: View {
                     diskItem(label: "합계", value: disk.totalDisplay, icon: "externaldrive", color: .orange)
                 }
 
-                // 비율 바
                 GeometryReader { geo in
                     let total = max(disk.totalBytes, 1)
                     HStack(spacing: 2) {
@@ -100,73 +101,55 @@ public struct IOSVersionView: View {
         .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 
-    // MARK: - Runtimes
+    // MARK: - Installed
 
-    private var iosVersionsSection: some View {
+    private var installedSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text("설치된 iOS 버전").font(.headline)
-                Spacer()
-                if viewModel.isDownloading {
-                    HStack(spacing: 6) {
-                        ProgressView().scaleEffect(0.7)
-                        Text("다운로드 중...").font(.caption).foregroundStyle(.secondary)
-                    }
-                } else {
-                    Button {
-                        Task { await viewModel.downloadLatestIOSVersion() }
-                    } label: {
-                        Label("최신 버전 다운로드", systemImage: "arrow.down.circle")
-                    }
-                    .buttonStyle(.bordered)
-                }
-            }
+            Text("설치된 iOS 버전").font(.headline)
 
             if viewModel.installedIOSVersions.isEmpty && !viewModel.isLoading {
                 VStack(spacing: 8) {
                     Image(systemName: "cpu").font(.largeTitle).foregroundStyle(.secondary)
-                    Text("설치된 iOS iOS 버전이 없습니다").foregroundStyle(.secondary)
-                    Text("iOS 버전을 다운로드하면 시뮬레이터 디바이스를 생성할 수 있습니다.")
+                    Text("설치된 iOS 버전이 없습니다").foregroundStyle(.secondary)
+                    Text("아래에서 원하는 버전을 다운로드하세요.")
                         .font(.caption).foregroundStyle(.tertiary)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 24)
             } else {
-                ForEach(viewModel.installedIOSVersions) { runtime in
-                    runtimeRow(runtime)
+                ForEach(viewModel.installedIOSVersions) { version in
+                    installedRow(version)
                 }
             }
         }
     }
 
-    private func runtimeRow(_ runtime: InstalledIOSVersion) -> some View {
+    private func installedRow(_ version: InstalledIOSVersion) -> some View {
         HStack(spacing: 12) {
             Image(systemName: "cpu")
                 .font(.title2)
-                .foregroundStyle(runtime.isReady ? .blue : .secondary)
+                .foregroundStyle(version.isReady ? .blue : .secondary)
                 .frame(width: 28)
 
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 6) {
-                    Text(runtime.displayName).font(.body).fontWeight(.medium)
-                    Text("v\(runtime.version)")
+                    Text(version.displayName).font(.body).fontWeight(.medium)
+                    Text("v\(version.version)")
                         .font(.caption)
                         .padding(.horizontal, 6).padding(.vertical, 2)
                         .background(.blue.opacity(0.1))
                         .clipShape(Capsule())
                 }
                 HStack(spacing: 8) {
-                    Text(runtime.displaySize).font(.caption).foregroundStyle(.secondary)
-                    Text(runtime.state).font(.caption).foregroundStyle(runtime.isReady ? .green : .orange)
+                    Text(version.displaySize).font(.caption).foregroundStyle(.secondary)
+                    Text(version.state).font(.caption).foregroundStyle(version.isReady ? .green : .orange)
                 }
             }
 
             Spacer()
 
-            if runtime.isDeletable {
-                Button {
-                    versionToDelete = runtime
-                } label: {
+            if version.isDeletable {
+                Button { versionToDelete = version } label: {
                     Image(systemName: "trash").foregroundStyle(.red)
                 }
                 .buttonStyle(.borderless)
@@ -174,6 +157,69 @@ public struct IOSVersionView: View {
             } else {
                 Text("시스템").font(.caption).foregroundStyle(.tertiary)
             }
+        }
+        .padding(10)
+        .background(.background.secondary)
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+    }
+
+    // MARK: - Downloadable
+
+    private var downloadableSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("다운로드 가능한 iOS 버전").font(.headline)
+                Spacer()
+                if viewModel.isLoadingDownloadable {
+                    ProgressView().scaleEffect(0.7)
+                }
+            }
+
+            if viewModel.isDownloading, let name = viewModel.downloadingVersionName {
+                HStack(spacing: 8) {
+                    ProgressView().scaleEffect(0.8)
+                    Text("\(name) 다운로드 중... (수십 분 소요될 수 있습니다)")
+                        .font(.callout).foregroundStyle(.secondary)
+                }
+                .padding(12)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(.blue.opacity(0.05))
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+            }
+
+            if viewModel.downloadableIOSVersions.isEmpty && !viewModel.isLoadingDownloadable {
+                Text("모든 iOS 버전이 이미 설치되어 있습니다.")
+                    .font(.caption).foregroundStyle(.secondary)
+                    .padding(.vertical, 8)
+            } else {
+                ForEach(viewModel.downloadableIOSVersions) { version in
+                    downloadableRow(version)
+                }
+            }
+        }
+    }
+
+    private func downloadableRow(_ version: DownloadableIOSVersion) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: "arrow.down.circle")
+                .font(.title2)
+                .foregroundStyle(.secondary)
+                .frame(width: 28)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(version.shortName).font(.body).fontWeight(.medium)
+                Text(version.displaySize).font(.caption).foregroundStyle(.secondary)
+            }
+
+            Spacer()
+
+            Button {
+                Task { await viewModel.downloadIOSVersion(version) }
+            } label: {
+                Label("다운로드", systemImage: "arrow.down.to.line")
+            }
+            .buttonStyle(.bordered)
+            .disabled(viewModel.isDownloading)
         }
         .padding(10)
         .background(.background.secondary)

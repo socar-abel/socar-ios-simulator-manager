@@ -5,9 +5,12 @@ import SimulatorDomainInterface
 public final class IOSVersionViewModel {
 
     public private(set) var installedIOSVersions: [InstalledIOSVersion] = []
+    public private(set) var downloadableIOSVersions: [DownloadableIOSVersion] = []
     public private(set) var diskUsage: DiskUsage?
     public private(set) var isLoading = false
+    public private(set) var isLoadingDownloadable = false
     public private(set) var isDownloading = false
+    public private(set) var downloadingVersionName: String?
     public private(set) var isDeleting = false
     public var errorMessage: String?
     public var successMessage: String?
@@ -22,6 +25,7 @@ public final class IOSVersionViewModel {
 
     public func onAppear() async {
         await refreshAll()
+        await loadDownloadableVersions()
     }
 
     public func refreshAll() async {
@@ -29,17 +33,28 @@ public final class IOSVersionViewModel {
         defer { isLoading = false }
 
         do {
-            async let runtimes = useCase.fetchInstalledIOSVersions()
+            async let versions = useCase.fetchInstalledIOSVersions()
             async let disk = useCase.fetchDiskUsage()
-            installedIOSVersions = try await runtimes
+            installedIOSVersions = try await versions
             diskUsage = try await disk
         } catch {
             errorMessage = error.localizedDescription
         }
     }
 
-    public func deleteIOSVersion(_ runtime: InstalledIOSVersion) async {
-        guard runtime.isDeletable else {
+    public func loadDownloadableVersions() async {
+        isLoadingDownloadable = true
+        defer { isLoadingDownloadable = false }
+
+        do {
+            downloadableIOSVersions = try await useCase.fetchDownloadableIOSVersions()
+        } catch {
+            // 네트워크 실패 시 조용히 무시 (설치된 목록은 표시)
+        }
+    }
+
+    public func deleteIOSVersion(_ version: InstalledIOSVersion) async {
+        guard version.isDeletable else {
             errorMessage = "이 iOS 버전은 삭제할 수 없습니다."
             return
         }
@@ -48,25 +63,31 @@ public final class IOSVersionViewModel {
         defer { isDeleting = false }
 
         do {
-            try await useCase.deleteIOSVersion(identifier: runtime.identifier)
-            successMessage = "\(runtime.displayName) iOS 버전이 삭제되었습니다."
+            try await useCase.deleteIOSVersion(identifier: version.identifier)
+            successMessage = "\(version.displayName)이(가) 삭제되었습니다."
             await refreshAll()
+            await loadDownloadableVersions()
         } catch {
             errorMessage = error.localizedDescription
         }
     }
 
-    public func downloadLatestIOSVersion() async {
+    public func downloadIOSVersion(_ version: DownloadableIOSVersion) async {
         isDownloading = true
+        downloadingVersionName = version.shortName
         errorMessage = nil
-        defer { isDownloading = false }
+        defer {
+            isDownloading = false
+            downloadingVersionName = nil
+        }
 
         do {
             try await useCase.downloadIOSVersion(platform: "iOS")
-            successMessage = "최신 iOS 버전 다운로드가 완료되었습니다."
+            successMessage = "\(version.shortName) 다운로드가 완료되었습니다."
             await refreshAll()
+            await loadDownloadableVersions()
         } catch {
-            errorMessage = "iOS 버전 다운로드 실패: \(error.localizedDescription)"
+            errorMessage = "\(version.shortName) 다운로드 실패: \(error.localizedDescription)"
         }
     }
 

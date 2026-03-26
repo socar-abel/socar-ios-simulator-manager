@@ -157,6 +157,41 @@ public final class SimulatorRepository<Dependency: SimulatorRepositoryDependency
             .sorted { $0.version > $1.version }
     }
 
+    public func listDownloadableIOSVersions() async throws -> [DownloadableIOSVersion] {
+        let url = URL(string: "https://devimages-cdn.apple.com/downloads/xcode/simulators/index2.dvtdownloadableindex")!
+        let (data, _) = try await URLSession.shared.data(from: url)
+
+        // plist → JSON 변환: plutil 사용
+        let tempPlist = FileManager.default.temporaryDirectory.appendingPathComponent("simindex.plist")
+        let tempJSON = FileManager.default.temporaryDirectory.appendingPathComponent("simindex.json")
+        try data.write(to: tempPlist)
+
+        let result = try await dependency.shell.run(
+            executable: "/usr/bin/plutil",
+            arguments: ["-convert", "json", "-o", tempJSON.path, tempPlist.path]
+        )
+        guard result.isSuccess else {
+            throw SimulatorRepositoryError.commandFailed("plist 변환 실패")
+        }
+
+        let jsonData = try Data(contentsOf: tempJSON)
+        try? FileManager.default.removeItem(at: tempPlist)
+        try? FileManager.default.removeItem(at: tempJSON)
+
+        let index = try JSONDecoder().decode(DVTDownloadableIndex.self, from: jsonData)
+        return index.downloadables
+            .filter { $0.name.contains("iOS") }
+            .map { item in
+                DownloadableIOSVersion(
+                    name: item.name,
+                    version: item.version,
+                    fileSize: item.fileSize,
+                    source: item.source ?? "",
+                    contentType: item.contentType ?? ""
+                )
+            }
+    }
+
     public func deleteIOSVersion(identifier: String) async throws {
         let result = try await dependency.shell.simctlArgs(["runtime", "delete", identifier])
         guard result.isSuccess else {
