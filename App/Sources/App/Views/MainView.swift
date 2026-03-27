@@ -1,4 +1,5 @@
 import SwiftUI
+import EnvironmentDomain
 import DeviceFeature
 import BuildFeature
 import IOSVersionFeature
@@ -11,7 +12,10 @@ struct MainView: View {
         NavigationSplitView {
             sidebar
         } detail: {
-            detail
+            VStack(spacing: 0) {
+                warningBanner
+                detail
+            }
         }
         .navigationTitle("SOCAR Simulator Manager")
     }
@@ -26,6 +30,30 @@ struct MainView: View {
                 .tag(AppRoute.iosVersions)
         }
         .listStyle(.sidebar)
+    }
+
+    @ViewBuilder
+    private var warningBanner: some View {
+        if let warnings = coordinator.environmentStatus?.warnings, !warnings.isEmpty {
+            ForEach(warnings, id: \.title) { warning in
+                HStack(spacing: 8) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundStyle(.orange)
+                    Text(warning.title).font(.callout).fontWeight(.medium)
+                    Text("—").foregroundStyle(.secondary)
+                    Text(warning.description).font(.callout).foregroundStyle(.secondary)
+                    Spacer()
+                    if case .noRuntimesAvailable = warning {
+                        Button("iOS 버전 탭으로 이동") {
+                            coordinator.selectedTab = .iosVersions
+                        }
+                        .buttonStyle(.bordered).controlSize(.small)
+                    }
+                }
+                .padding(.horizontal, 16).padding(.vertical, 10)
+                .background(.orange.opacity(0.08))
+            }
+        }
     }
 
     @ViewBuilder
