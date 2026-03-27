@@ -48,19 +48,24 @@ struct OnboardingView: View {
                         )
                     } label: {
                         Label("App Store에서 Xcode 설치", systemImage: "arrow.down.app")
+                            .font(.title2)
+                            .frame(maxWidth: 400, minHeight: 56)
                     }
                     .buttonStyle(.borderedProminent).controlSize(.large)
+
+                    Text("App Store 버전이 호환되지 않는다면?")
+                        .font(.caption).foregroundStyle(.secondary)
 
                     Button {
                         NSWorkspace.shared.open(
                             URL(string: "https://xcodereleases.com")!
                         )
                     } label: {
-                        Label("App Store 버전이 호환되지 않는다면?", systemImage: "questionmark.circle")
+                        Label("내 macOS에 호환되는 버전 찾아서 설치", systemImage: "magnifyingglass")
+                            .font(.title2)
+                            .frame(maxWidth: 400, minHeight: 56)
                     }
-                    .buttonStyle(.borderless)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .buttonStyle(.bordered).controlSize(.large)
                 }
             }
 
