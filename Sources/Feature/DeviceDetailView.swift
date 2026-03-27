@@ -4,7 +4,6 @@ import Core
 
 struct DeviceDetailView: View {
 
-    let device: SimulatorDevice
     @Bindable var viewModel: DeviceListViewModel
 
     @State private var isPerformingAction = false
@@ -13,46 +12,50 @@ struct DeviceDetailView: View {
     @State private var installProgressMessage = ""
     @State private var deepLinkURL = ""
 
-    var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                header
-                Divider()
-                controls
-                if device.isBooted {
-                    Divider()
-                    deepLinkSection
-                    Divider()
-                    appManagement
-                }
-                Divider()
-                info
+    private var device: SimulatorDevice? { viewModel.selectedDevice }
 
-                if let error = viewModel.errorMessage {
-                    ErrorBanner(message: error) { viewModel.dismissError() }
+    var body: some View {
+        Group {
+            if let device {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 24) {
+                        header(device)
+                        Divider()
+                        controls(device)
+                        if device.isBooted {
+                            Divider()
+                            deepLinkSection(device)
+                            Divider()
+                            appManagement(device)
+                        }
+                        Divider()
+                        info(device)
+                    }
+                    .padding(24)
                 }
             }
-            .padding(24)
         }
         .fileImporter(
             isPresented: $showFilePicker,
-            allowedContentTypes: [.application, .zip],
+            allowedContentTypes: [.directory, .zip, .application],
             allowsMultipleSelection: false
         ) { result in
             handleFileImport(result)
         }
         .confirmationDialog(
-            "'\(device.name)' 디바이스를 삭제하시겠습니까?",
+            "'\(device?.name ?? "")' 디바이스를 삭제하시겠습니까?",
             isPresented: $showDeleteConfirmation,
             titleVisibility: .visible
         ) {
-            Button("삭제", role: .destructive) { Task { await viewModel.delete(udid: device.udid) } }
+            if let device {
+                Button("삭제", role: .destructive) { Task { await viewModel.delete(udid: device.udid) } }
+            }
         } message: {
             Text("이 작업은 되돌릴 수 없습니다.")
         }
     }
 
-    private var header: some View {
+    private func header(_ device: SimulatorDevice) -> some View {
         HStack(spacing: 16) {
             Image(systemName: device.name.lowercased().contains("ipad") ? "ipad" : "iphone")
                 .font(.system(size: 40))
@@ -70,7 +73,7 @@ struct DeviceDetailView: View {
         }
     }
 
-    private var controls: some View {
+    private func controls(_ device: SimulatorDevice) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("제어").font(.headline)
             HStack(spacing: 12) {
@@ -93,14 +96,14 @@ struct DeviceDetailView: View {
         }
     }
 
-    private var deepLinkSection: some View {
+    private func deepLinkSection(_ device: SimulatorDevice) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("딥링크").font(.headline)
             HStack(spacing: 8) {
                 TextField("socar-v2://path 또는 https://...", text: $deepLinkURL)
                     .textFieldStyle(.roundedBorder)
-                    .onSubmit { openDeepLink() }
-                Button("실행") { openDeepLink() }
+                    .onSubmit { openDeepLink(device) }
+                Button("실행") { openDeepLink(device) }
                     .buttonStyle(.borderedProminent)
                     .disabled(deepLinkURL.trimmingCharacters(in: .whitespaces).isEmpty || isPerformingAction)
             }
@@ -109,7 +112,7 @@ struct DeviceDetailView: View {
         }
     }
 
-    private func openDeepLink() {
+    private func openDeepLink(_ device: SimulatorDevice) {
         let url = deepLinkURL.trimmingCharacters(in: .whitespaces)
         guard !url.isEmpty else { return }
         performAction {
@@ -118,7 +121,7 @@ struct DeviceDetailView: View {
         }
     }
 
-    private var appManagement: some View {
+    private func appManagement(_ device: SimulatorDevice) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("앱 관리").font(.headline)
             HStack(spacing: 12) {
@@ -135,7 +138,7 @@ struct DeviceDetailView: View {
         }
     }
 
-    private var info: some View {
+    private func info(_ device: SimulatorDevice) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("정보").font(.headline)
             infoRow("UDID", value: device.udid)
@@ -161,6 +164,7 @@ struct DeviceDetailView: View {
 
     private func handleFileImport(_ result: Result<[URL], Error>) {
         guard case .success(let urls) = result, let url = urls.first else { return }
+        guard let device else { return }
         Task {
             installProgressMessage = "앱 설치 중..."
             defer { installProgressMessage = "" }

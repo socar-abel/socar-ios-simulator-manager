@@ -157,9 +157,9 @@ public final class SimulatorRepository<Dependency: SimulatorRepositoryDependency
             let deviceName = dir.replacingOccurrences(of: ".simdevicetype", with: "")
             guard let identifier = nameToIdentifier[deviceName] else { continue }
 
-            let screenWidth = plist["mainScreenWidth"] as? Int ?? 0
-            let screenHeight = plist["mainScreenHeight"] as? Int ?? 0
-            let screenScale = plist["mainScreenScale"] as? Int ?? 1
+            let screenWidth = Self.intValue(plist["mainScreenWidth"]) ?? 0
+            let screenHeight = Self.intValue(plist["mainScreenHeight"]) ?? 0
+            let screenScale = Self.intValue(plist["mainScreenScale"]) ?? 1
             let sensorBar = plist["sensorBarImage"] as? String ?? "none"
             let hasNotch = sensorBar != "none"
 
@@ -172,6 +172,13 @@ public final class SimulatorRepository<Dependency: SimulatorRepositoryDependency
             )
         }
         return profiles
+    }
+
+    private static func intValue(_ value: Any?) -> Int? {
+        if let i = value as? Int { return i }
+        if let d = value as? Double { return Int(d) }
+        if let s = value as? String, let i = Int(s) { return i }
+        return nil
     }
 
     public func listInstalledApps(udid: String) async throws -> Set<String> {

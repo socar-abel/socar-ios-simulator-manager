@@ -34,7 +34,9 @@ struct DeviceRowView: View {
 
             Spacer()
             StatusBadge(isActive: device.isBooted)
+                .padding(.trailing, 24)
         }
+        .padding(.leading, 24)
         .padding(.vertical, 6)
     }
 }

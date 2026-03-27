@@ -218,8 +218,8 @@ public struct DeviceListView: View {
 
     @ViewBuilder
     private var detailPanel: some View {
-        if let device = viewModel.selectedDevice, !viewModel.isMultiSelectMode {
-            DeviceDetailView(device: device, viewModel: viewModel)
+        if viewModel.selectedDevice != nil, !viewModel.isMultiSelectMode {
+            DeviceDetailView(viewModel: viewModel)
         } else if viewModel.isMultiSelectMode {
             ContentUnavailableView(
                 "디바이스를 선택하세요",
