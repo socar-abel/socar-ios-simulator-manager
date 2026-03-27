@@ -10,7 +10,11 @@ public final class DeviceListViewModel {
     public private(set) var deviceProfiles: [String: DeviceTypeProfile] = [:]
     public private(set) var isLoading = false
     public private(set) var isDeleting = false
+    public private(set) var deletingDeviceName: String?
+    public var isCreating = false
+    public var creatingDeviceName: String?
     public var errorMessage: String?
+    public var successMessage: String?
 
     public var selectedDevice: SimulatorDevice?
 
@@ -163,11 +167,20 @@ public final class DeviceListViewModel {
     }
 
     public func delete(udid: String) async {
+        let deviceName = devices.first { $0.udid == udid }?.name ?? "디바이스"
+        isDeleting = true
+        deletingDeviceName = deviceName
         errorMessage = nil
+        defer {
+            isDeleting = false
+            deletingDeviceName = nil
+        }
+
         do {
             try await useCase.deleteDevice(udid: udid)
             selectedDevice = nil
             await refreshAll()
+            successMessage = "'\(deviceName)'이(가) 삭제되었습니다."
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -175,9 +188,14 @@ public final class DeviceListViewModel {
 
     public func deleteSelected() async {
         guard !selectedUDIDs.isEmpty else { return }
+        let count = selectedUDIDs.count
         isDeleting = true
+        deletingDeviceName = "\(count)개 디바이스"
         errorMessage = nil
-        defer { isDeleting = false }
+        defer {
+            isDeleting = false
+            deletingDeviceName = nil
+        }
 
         var failCount = 0
         for udid in selectedUDIDs {
@@ -188,7 +206,7 @@ public final class DeviceListViewModel {
             }
         }
 
-        let deletedCount = selectedUDIDs.count - failCount
+        let deletedCount = count - failCount
         selectedUDIDs.removeAll()
         selectedDevice = nil
         isMultiSelectMode = false
@@ -196,6 +214,8 @@ public final class DeviceListViewModel {
 
         if failCount > 0 {
             errorMessage = "\(deletedCount)개 삭제 완료, \(failCount)개 삭제 실패"
+        } else {
+            successMessage = "\(deletedCount)개 디바이스가 삭제되었습니다."
         }
     }
 
@@ -226,6 +246,10 @@ public final class DeviceListViewModel {
 
     public func dismissError() {
         errorMessage = nil
+    }
+
+    public func dismissSuccess() {
+        successMessage = nil
     }
 }
 

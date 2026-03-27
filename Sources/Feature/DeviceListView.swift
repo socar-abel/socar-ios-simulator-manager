@@ -13,13 +13,69 @@ public struct DeviceListView: View {
     }
 
     public var body: some View {
-        HStack(spacing: 0) {
-            listPanel
-                .frame(minWidth: 320, idealWidth: 360)
-            Divider()
-            detailPanel
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        ZStack {
+            HStack(spacing: 0) {
+                listPanel
+                    .frame(minWidth: 320, idealWidth: 360)
+                Divider()
+                detailPanel
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+
+            // 삭제 중 오버레이
+            if viewModel.isDeleting, let name = viewModel.deletingDeviceName {
+                Color.black.opacity(0.3)
+                    .ignoresSafeArea()
+                VStack(spacing: 16) {
+                    ProgressView()
+                        .scaleEffect(1.2)
+                    Text("'\(name)' 삭제 중...")
+                        .font(.headline)
+                        .foregroundStyle(.white)
+                }
+                .padding(32)
+                .background(.ultraThinMaterial)
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+            }
+
+            // 생성 중 오버레이
+            if viewModel.isCreating, let name = viewModel.creatingDeviceName {
+                Color.black.opacity(0.3)
+                    .ignoresSafeArea()
+                VStack(spacing: 16) {
+                    ProgressView()
+                        .scaleEffect(1.2)
+                    Text("'\(name)' 생성 중...")
+                        .font(.headline)
+                        .foregroundStyle(.white)
+                }
+                .padding(32)
+                .background(.ultraThinMaterial)
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+            }
         }
+        .overlay(alignment: .bottom) {
+            if let success = viewModel.successMessage {
+                HStack(spacing: 8) {
+                    Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
+                    Text(success).font(.callout)
+                    Spacer()
+                    Button("닫기") { viewModel.dismissSuccess() }.buttonStyle(.borderless)
+                }
+                .padding(12)
+                .background(.green.opacity(0.1))
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+                .padding(.horizontal, 16)
+                .padding(.bottom, 12)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+                .onAppear {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                        withAnimation { viewModel.dismissSuccess() }
+                    }
+                }
+            }
+        }
+        .animation(.easeInOut(duration: 0.25), value: viewModel.successMessage)
         .sheet(isPresented: $showCreateSheet) {
             CreateDeviceSheet(viewModel: viewModel)
         }

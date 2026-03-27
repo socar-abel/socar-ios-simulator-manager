@@ -64,7 +64,8 @@ public final class SimulatorRepository<Dependency: SimulatorRepositoryDependency
             SimulatorDeviceType(
                 identifier: $0.identifier,
                 name: $0.name,
-                productFamily: $0.productFamily
+                productFamily: $0.productFamily,
+                minRuntimeVersionString: $0.minRuntimeVersionString
             )
         }
     }

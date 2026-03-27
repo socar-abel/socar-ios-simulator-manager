@@ -43,6 +43,7 @@ struct SimctlDeviceTypeDTO: Codable {
     let identifier: String
     let name: String
     let productFamily: String?
+    let minRuntimeVersionString: String?
 }
 
 // MARK: - Runtime Detail (simctl runtime list -j)
