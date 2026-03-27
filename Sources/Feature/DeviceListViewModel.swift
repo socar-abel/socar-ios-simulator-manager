@@ -32,7 +32,7 @@ public final class DeviceListViewModel {
         case .notchOnly:
             result = result.filter { profile(for: $0)?.hasNotch == true }
         case .noNotchOnly:
-            result = result.filter { profile(for: $0)?.hasNotch != true }
+            result = result.filter { profile(for: $0)?.hasNotch == false }
         }
 
         // 정렬
@@ -47,9 +47,15 @@ public final class DeviceListViewModel {
             case .runtimeOldest:
                 return (a.runtimeIdentifier ?? "") < (b.runtimeIdentifier ?? "")
             case .screenWidthAsc:
-                return (profile(for: a)?.logicalWidth ?? 0) < (profile(for: b)?.logicalWidth ?? 0)
+                let wa = profile(for: a)?.logicalWidth
+                let wb = profile(for: b)?.logicalWidth
+                if wa == nil && wb == nil { return a.name.localizedStandardCompare(b.name) == .orderedAscending }
+                return (wa ?? .greatestFiniteMagnitude) < (wb ?? .greatestFiniteMagnitude)
             case .screenWidthDesc:
-                return (profile(for: a)?.logicalWidth ?? 0) > (profile(for: b)?.logicalWidth ?? 0)
+                let wa = profile(for: a)?.logicalWidth
+                let wb = profile(for: b)?.logicalWidth
+                if wa == nil && wb == nil { return a.name.localizedStandardCompare(b.name) == .orderedDescending }
+                return (wa ?? 0) > (wb ?? 0)
             }
         }
         return result

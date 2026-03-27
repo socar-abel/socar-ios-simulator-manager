@@ -243,7 +243,7 @@ public struct BuildListView: View {
             Button("닫기") { viewModel.dismissSuccess() }.buttonStyle(.borderless)
         }
         .padding(12)
-        .background(.green.opacity(0.1))
+        .background(.green.opacity(0.9))
         .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 }
