@@ -7,8 +7,7 @@ public struct BuildListView: View {
     @Bindable var viewModel: BuildListViewModel
 
     @State private var showFilePicker = false
-    @State private var showInstallSheet = false
-    @State private var appToInstall: URL?
+    @State private var appToInstall: IdentifiableURL?
     @State private var isDropTargeted = false
     @State private var refreshId = UUID()
 
@@ -51,11 +50,9 @@ public struct BuildListView: View {
                 }
             }
         }
-        .sheet(isPresented: $showInstallSheet) {
-            if let url = appToInstall {
-                InstallTargetSheet(appURL: url, viewModel: viewModel) {
-                    showInstallSheet = false
-                }
+        .sheet(item: $appToInstall) { item in
+            InstallTargetSheet(appURL: item.url, viewModel: viewModel) {
+                appToInstall = nil
             }
         }
     }
@@ -138,8 +135,7 @@ public struct BuildListView: View {
             Spacer()
 
             Button("설치") {
-                appToInstall = appURL
-                showInstallSheet = true
+                appToInstall = IdentifiableURL(url: appURL)
             }
             .buttonStyle(.bordered)
 
@@ -259,4 +255,11 @@ struct InstallTargetSheet: View {
         .frame(width: 400, height: 300)
         .task { bootedDevices = await viewModel.bootedDevices() }
     }
+}
+
+// MARK: - Helpers
+
+struct IdentifiableURL: Identifiable {
+    let id = UUID()
+    let url: URL
 }
