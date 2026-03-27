@@ -45,6 +45,9 @@ final class AppCoordinator {
             settingsViewModel = assembly.settingsViewModel()
             iosVersionViewModel = try await assembly.iosVersionViewModel()
             isReady = true
+
+            // 디스크 사용량 등 iOS 버전 데이터를 백그라운드에서 미리 로드
+            Task { await iosVersionViewModel?.onAppear() }
         } catch {
             environmentStatus = EnvironmentStatus(
                 xcodeInstalled: false,
