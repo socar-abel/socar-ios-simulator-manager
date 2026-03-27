@@ -70,10 +70,15 @@ public final class IOSVersionViewModel {
 
         do {
             try await useCase.deleteIOSVersion(identifier: version.identifier)
+            // 실제 삭제 완료까지 폴링 (최대 30초)
+            for _ in 0..<15 {
+                try? await Task.sleep(for: .seconds(2))
+                await refreshAll()
+                if !installedIOSVersions.contains(where: { $0.identifier == version.identifier }) {
+                    break
+                }
+            }
             successMessage = "\(version.displayName)이(가) 삭제되었습니다."
-            // 파일시스템 정리 대기 후 디스크 사용량 갱신
-            try? await Task.sleep(for: .seconds(1))
-            await refreshAll()
             await loadDownloadableVersions()
         } catch {
             errorMessage = error.localizedDescription
@@ -90,9 +95,17 @@ public final class IOSVersionViewModel {
         }
 
         do {
+            let beforeCount = installedIOSVersions.count
             try await useCase.downloadIOSVersion(platform: "iOS", buildVersion: version.buildVersion)
+            // 설치 등록 완료까지 폴링 (최대 30초)
+            for _ in 0..<15 {
+                await refreshAll()
+                if installedIOSVersions.count > beforeCount {
+                    break
+                }
+                try? await Task.sleep(for: .seconds(2))
+            }
             successMessage = "\(version.shortName) 다운로드가 완료되었습니다."
-            await refreshAll()
             await loadDownloadableVersions()
         } catch {
             errorMessage = "\(version.shortName) 다운로드 실패: \(error.localizedDescription)"
