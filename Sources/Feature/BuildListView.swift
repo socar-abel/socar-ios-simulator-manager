@@ -108,6 +108,7 @@ public struct BuildListView: View {
                     systemImage: "app.dashed",
                     description: Text("파일을 추가하거나 여기로 드래그하세요.")
                 )
+                .frame(maxWidth: .infinity)
                 .padding(.vertical, 40)
             } else {
                 VStack(spacing: 8) {
