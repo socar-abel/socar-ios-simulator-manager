@@ -211,6 +211,8 @@ struct InstallTargetSheet: View {
     let onDismiss: () -> Void
 
     @State private var bootedDevices: [SimulatorDevice] = []
+    @State private var isInstalling = false
+    @State private var installError: String?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -218,11 +220,28 @@ struct InstallTargetSheet: View {
                 Text("설치할 디바이스 선택").font(.headline)
                 Spacer()
                 Button("취소") { onDismiss() }.buttonStyle(.borderless)
+                    .disabled(isInstalling)
             }
             .padding()
             Divider()
 
-            if bootedDevices.isEmpty {
+            if let error = installError {
+                HStack(spacing: 8) {
+                    Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.red)
+                    Text(error).font(.caption).foregroundStyle(.red)
+                    Spacer()
+                }
+                .padding(.horizontal).padding(.vertical, 8)
+                .background(.red.opacity(0.05))
+            }
+
+            if isInstalling {
+                VStack(spacing: 12) {
+                    ProgressView()
+                    Text("설치 중...").font(.callout).foregroundStyle(.secondary)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if bootedDevices.isEmpty {
                 ContentUnavailableView(
                     "실행중인 디바이스가 없습니다",
                     systemImage: "iphone.slash",
@@ -232,10 +251,7 @@ struct InstallTargetSheet: View {
                 List {
                     ForEach(bootedDevices) { device in
                         Button {
-                            Task {
-                                try? await viewModel.installOnDevice(appURL: appURL, udid: device.udid)
-                                onDismiss()
-                            }
+                            install(on: device)
                         } label: {
                             HStack {
                                 Image(systemName: "iphone")
@@ -250,10 +266,29 @@ struct InstallTargetSheet: View {
                         .buttonStyle(.plain)
                     }
                 }
+
+                Text("설치 경로: \(appURL.path)")
+                    .font(.caption2).foregroundStyle(.tertiary)
+                    .padding(.horizontal).padding(.bottom, 8)
             }
         }
-        .frame(width: 400, height: 300)
+        .frame(width: 450, height: 350)
         .task { bootedDevices = await viewModel.bootedDevices() }
+    }
+
+    private func install(on device: SimulatorDevice) {
+        isInstalling = true
+        installError = nil
+        Task {
+            do {
+                try await viewModel.installOnDevice(appURL: appURL, udid: device.udid)
+                viewModel.successMessage = "\(appURL.lastPathComponent)을(를) \(device.name)에 설치했습니다."
+                onDismiss()
+            } catch {
+                installError = error.localizedDescription
+                isInstalling = false
+            }
+        }
     }
 }
 
