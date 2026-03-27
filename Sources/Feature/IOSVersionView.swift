@@ -200,11 +200,11 @@ public struct IOSVersionView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 8))
             }
 
-            if viewModel.downloadableIOSVersions.isEmpty && !viewModel.isLoadingDownloadable {
+            if viewModel.downloadableIOSVersions.isEmpty && !viewModel.isLoadingDownloadable && !viewModel.isLoading {
                 Text("모든 iOS 버전이 이미 설치되어 있습니다.")
                     .font(.caption).foregroundStyle(.secondary)
                     .padding(.vertical, 8)
-            } else {
+            } else if !viewModel.downloadableIOSVersions.isEmpty {
                 ForEach(viewModel.downloadableIOSVersions) { version in
                     downloadableRow(version)
                 }
