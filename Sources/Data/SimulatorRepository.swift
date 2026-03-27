@@ -132,6 +132,41 @@ public final class SimulatorRepository<Dependency: SimulatorRepositoryDependency
         )
     }
 
+    public func loadDeviceTypeProfiles() async throws -> [String: DeviceTypeProfile] {
+        let basePath = "/Library/Developer/CoreSimulator/Profiles/DeviceTypes"
+        guard let contents = try? FileManager.default.contentsOfDirectory(atPath: basePath) else { return [:] }
+
+        var profiles: [String: DeviceTypeProfile] = [:]
+        for dir in contents where dir.hasSuffix(".simdevicetype") {
+            let plistPath = "\(basePath)/\(dir)/Contents/Resources/profile.plist"
+            guard FileManager.default.fileExists(atPath: plistPath),
+                  let data = FileManager.default.contents(atPath: plistPath),
+                  let plist = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any]
+            else { continue }
+
+            guard let identifier = (plist["modelIdentifier"] as? String).flatMap({ _ in
+                // identifier는 디바이스 타입 전체 경로에서 추출
+                let name = dir.replacingOccurrences(of: ".simdevicetype", with: "")
+                return "com.apple.CoreSimulator.SimDeviceType.\(name.replacingOccurrences(of: " ", with: "-"))"
+            }) else { continue }
+
+            let screenWidth = plist["mainScreenWidth"] as? Int ?? 0
+            let screenHeight = plist["mainScreenHeight"] as? Int ?? 0
+            let screenScale = plist["mainScreenScale"] as? Int ?? 1
+            let sensorBar = plist["sensorBarImage"] as? String ?? "none"
+            let hasNotch = sensorBar != "none"
+
+            profiles[identifier] = DeviceTypeProfile(
+                identifier: identifier,
+                screenWidth: screenWidth,
+                screenHeight: screenHeight,
+                screenScale: screenScale,
+                hasNotch: hasNotch
+            )
+        }
+        return profiles
+    }
+
     public func listInstalledApps(udid: String) async throws -> Set<String> {
         let result = try await dependency.shell.simctlArgs(["listapps", udid])
         guard result.isSuccess else {

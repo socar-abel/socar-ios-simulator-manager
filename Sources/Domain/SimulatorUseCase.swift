@@ -74,6 +74,10 @@ public final class SimulatorUseCase<Dependency: SimulatorUseCaseDependency>: Sim
         return installedApps.contains(bundleId)
     }
 
+    public func fetchDeviceTypeProfiles() async throws -> [String: DeviceTypeProfile] {
+        try await dependency.repository.loadDeviceTypeProfiles()
+    }
+
     public func bringSimulatorToFront() async throws {
         try await dependency.repository.bringSimulatorToFront()
     }

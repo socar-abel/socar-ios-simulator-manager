@@ -7,11 +7,54 @@ public final class DeviceListViewModel {
     public private(set) var devices: [SimulatorDevice] = []
     public private(set) var runtimes: [SimulatorIOSVersion] = []
     public private(set) var deviceTypes: [SimulatorDeviceType] = []
+    public private(set) var deviceProfiles: [String: DeviceTypeProfile] = [:]
     public private(set) var isLoading = false
     public private(set) var isDeleting = false
     public var errorMessage: String?
 
     public var selectedDevice: SimulatorDevice?
+
+    // MARK: - Sort & Filter
+
+    public var sortOption: DeviceSortOption = .nameAsc
+    public var notchFilter: NotchFilter = .all
+
+    public var filteredAndSortedDevices: [SimulatorDevice] {
+        var result = devices
+
+        // 필터
+        switch notchFilter {
+        case .all: break
+        case .notchOnly:
+            result = result.filter { profile(for: $0)?.hasNotch == true }
+        case .noNotchOnly:
+            result = result.filter { profile(for: $0)?.hasNotch != true }
+        }
+
+        // 정렬
+        result.sort { a, b in
+            switch sortOption {
+            case .nameAsc:
+                return a.name.localizedStandardCompare(b.name) == .orderedAscending
+            case .nameDesc:
+                return a.name.localizedStandardCompare(b.name) == .orderedDescending
+            case .runtimeNewest:
+                return (a.runtimeIdentifier ?? "") > (b.runtimeIdentifier ?? "")
+            case .runtimeOldest:
+                return (a.runtimeIdentifier ?? "") < (b.runtimeIdentifier ?? "")
+            case .screenWidthAsc:
+                return (profile(for: a)?.logicalWidth ?? 0) < (profile(for: b)?.logicalWidth ?? 0)
+            case .screenWidthDesc:
+                return (profile(for: a)?.logicalWidth ?? 0) > (profile(for: b)?.logicalWidth ?? 0)
+            }
+        }
+        return result
+    }
+
+    public func profile(for device: SimulatorDevice) -> DeviceTypeProfile? {
+        guard let typeId = device.deviceTypeIdentifier else { return nil }
+        return deviceProfiles[typeId]
+    }
 
     // MARK: - Multi Selection
 
@@ -56,6 +99,10 @@ public final class DeviceListViewModel {
     // MARK: - Input
 
     public func onAppear() async {
+        // 프로필은 한 번만 로드
+        if deviceProfiles.isEmpty {
+            deviceProfiles = (try? await useCase.fetchDeviceTypeProfiles()) ?? [:]
+        }
         await refreshAll()
     }
 
@@ -165,4 +212,21 @@ public final class DeviceListViewModel {
     public func dismissError() {
         errorMessage = nil
     }
+}
+
+// MARK: - Sort & Filter Enums
+
+public enum DeviceSortOption: String, CaseIterable {
+    case nameAsc = "이름순"
+    case nameDesc = "이름 역순"
+    case runtimeNewest = "iOS 최신순"
+    case runtimeOldest = "iOS 오래된순"
+    case screenWidthAsc = "화면 좁은순"
+    case screenWidthDesc = "화면 넓은순"
+}
+
+public enum NotchFilter: String, CaseIterable {
+    case all = "전체"
+    case notchOnly = "노치/다이나믹 아일랜드"
+    case noNotchOnly = "노치 없음"
 }

@@ -5,6 +5,7 @@ import Core
 struct DeviceRowView: View {
 
     let device: SimulatorDevice
+    var profile: DeviceTypeProfile?
 
     var body: some View {
         HStack(spacing: 10) {
@@ -17,10 +18,17 @@ struct DeviceRowView: View {
                 Text(device.name)
                     .font(.body)
                     .fontWeight(.medium)
-                if let runtime = device.runtimeDisplayName {
-                    Text(runtime)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                HStack(spacing: 6) {
+                    if let runtime = device.runtimeDisplayName {
+                        Text(runtime)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    if let p = profile {
+                        Text(p.screenSizeDescription)
+                            .font(.caption2)
+                            .foregroundStyle(.tertiary)
+                    }
                 }
             }
 

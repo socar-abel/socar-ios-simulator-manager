@@ -84,7 +84,7 @@ public struct DeviceListView: View {
                 Text("디바이스")
                     .font(.headline)
                 Spacer()
-                Text("\(viewModel.devices.count)개")
+                Text("\(viewModel.filteredAndSortedDevices.count)개")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 Button("선택") { viewModel.isMultiSelectMode = true }
@@ -95,10 +95,35 @@ public struct DeviceListView: View {
         .padding(.vertical, 12)
     }
 
+    private var sortFilterBar: some View {
+        HStack(spacing: 8) {
+            Picker("정렬", selection: $viewModel.sortOption) {
+                ForEach(DeviceSortOption.allCases, id: \.self) { option in
+                    Text(option.rawValue).tag(option)
+                }
+            }
+            .pickerStyle(.menu)
+            .fixedSize()
+
+            Picker("필터", selection: $viewModel.notchFilter) {
+                ForEach(NotchFilter.allCases, id: \.self) { option in
+                    Text(option.rawValue).tag(option)
+                }
+            }
+            .pickerStyle(.menu)
+            .fixedSize()
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 6)
+    }
+
     private var deviceList: some View {
         VStack(spacing: 0) {
+            sortFilterBar
+            Divider()
             List {
-                let booted = viewModel.devices.filter(\.isBooted)
+                let sorted = viewModel.filteredAndSortedDevices
+                let booted = sorted.filter(\.isBooted)
                 if !booted.isEmpty {
                     Section("실행중") {
                         ForEach(booted) { device in
@@ -106,7 +131,7 @@ public struct DeviceListView: View {
                         }
                     }
                 }
-                let shutdown = viewModel.devices.filter(\.isShutdown)
+                let shutdown = sorted.filter(\.isShutdown)
                 if !shutdown.isEmpty {
                     Section("종료됨") {
                         ForEach(shutdown) { device in
@@ -114,8 +139,7 @@ public struct DeviceListView: View {
                         }
                     }
                 }
-                // Booted/Shutdown 외 기타 상태
-                let other = viewModel.devices.filter { !$0.isBooted && !$0.isShutdown }
+                let other = sorted.filter { !$0.isBooted && !$0.isShutdown }
                 if !other.isEmpty {
                     Section("기타") {
                         ForEach(other) { device in
@@ -139,7 +163,7 @@ public struct DeviceListView: View {
                     .foregroundStyle(viewModel.isSelected(device) ? .blue : .secondary)
                     .font(.title3)
             }
-            DeviceRowView(device: device)
+            DeviceRowView(device: device, profile: viewModel.profile(for: device))
         }
         .contentShape(Rectangle())
         .onTapGesture {
