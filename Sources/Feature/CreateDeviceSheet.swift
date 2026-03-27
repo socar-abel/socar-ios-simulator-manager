@@ -87,19 +87,10 @@ struct CreateDeviceSheet: View {
         errorMessage = nil
         let name = deviceName.isEmpty ? dt.name : deviceName
 
-        // 생성 중 오버레이 표시
-        viewModel.isCreating = true
-        viewModel.creatingDeviceName = name
-
         Task {
-            defer {
-                isCreating = false
-                viewModel.isCreating = false
-                viewModel.creatingDeviceName = nil
-            }
+            defer { isCreating = false }
             do {
                 try await viewModel.createDevice(name: name, deviceType: dt, runtime: rt)
-                viewModel.successMessage = "'\(name)'이(가) 생성되었습니다."
                 dismiss()
             } catch {
                 errorMessage = Self.translateError(error.localizedDescription)

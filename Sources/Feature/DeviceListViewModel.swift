@@ -224,12 +224,19 @@ public final class DeviceListViewModel {
         deviceType: SimulatorDeviceType,
         runtime: SimulatorIOSVersion
     ) async throws {
+        isCreating = true
+        creatingDeviceName = name
+        defer {
+            isCreating = false
+            creatingDeviceName = nil
+        }
         _ = try await useCase.createDevice(
             name: name,
             deviceType: deviceType,
             runtime: runtime
         )
         await refreshAll()
+        successMessage = "'\(name)'이(가) 생성되었습니다."
     }
 
     public func installApp(udid: String, appPath: URL) async throws {
