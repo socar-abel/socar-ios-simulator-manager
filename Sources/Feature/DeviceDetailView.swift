@@ -12,8 +12,6 @@ struct DeviceDetailView: View {
     @State private var showFilePicker = false
     @State private var installProgressMessage = ""
 
-    private let socarBundleId = "kr.socar.socarapp"
-
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
@@ -77,6 +75,9 @@ struct DeviceDetailView: View {
                     ActionButton("종료", icon: "stop.fill", style: .secondary, isDisabled: isPerformingAction) {
                         performAction { await viewModel.shutdown(udid: device.udid) }
                     }
+                    ActionButton("화면 보기", icon: "macwindow", style: .primary, isDisabled: isPerformingAction) {
+                        performAction { try await viewModel.bringSimulatorToFront() }
+                    }
                 } else {
                     ActionButton("부팅", icon: "play.fill", style: .primary, isDisabled: isPerformingAction) {
                         performAction { await viewModel.boot(udid: device.udid) }
@@ -95,11 +96,6 @@ struct DeviceDetailView: View {
             HStack(spacing: 12) {
                 ActionButton("앱 설치 (.app / .zip)", icon: "square.and.arrow.down", style: .primary) {
                     showFilePicker = true
-                }
-                ActionButton("SOCAR 앱 실행", icon: "play.rectangle", style: .secondary) {
-                    performAction {
-                        try await viewModel.launchApp(udid: device.udid, bundleId: socarBundleId)
-                    }
                 }
             }
             if !installProgressMessage.isEmpty {

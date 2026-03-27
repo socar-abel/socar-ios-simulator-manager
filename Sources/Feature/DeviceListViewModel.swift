@@ -95,6 +95,10 @@ public final class DeviceListViewModel {
         }
     }
 
+    public func bringSimulatorToFront() async throws {
+        try await useCase.bringSimulatorToFront()
+    }
+
     public func delete(udid: String) async {
         errorMessage = nil
         do {
