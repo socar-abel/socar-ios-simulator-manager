@@ -239,7 +239,7 @@ struct InstallTargetSheet: View {
             HStack {
                 Text("설치할 디바이스 선택").font(.headline)
                 Spacer()
-                Button("취소") { onDismiss() }.buttonStyle(.borderless)
+                Button("취소") { onDismiss() }.buttonStyle(.borderless).keyboardShortcut(.cancelAction)
                     .disabled(isInstalling)
             }
             .padding()

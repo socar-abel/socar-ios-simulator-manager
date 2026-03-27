@@ -26,7 +26,7 @@ struct CreateDeviceSheet: View {
             HStack {
                 Text("새 디바이스 생성").font(.headline)
                 Spacer()
-                Button("취소") { dismiss() }.buttonStyle(.borderless)
+                Button("취소") { dismiss() }.buttonStyle(.borderless).keyboardShortcut(.cancelAction)
             }
             .padding()
             Divider()
