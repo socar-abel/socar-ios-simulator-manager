@@ -119,17 +119,43 @@ public struct BuildListView: View {
     }
 
     private func buildRow(_ appURL: URL) -> some View {
-        HStack(spacing: 12) {
-            Image(systemName: "app.fill")
-                .foregroundStyle(.blue)
-                .font(.title2)
-                .frame(width: 28)
+        let info = viewModel.appInfo(from: appURL)
+        return HStack(spacing: 12) {
+            if let icon = info.iconImage {
+                Image(nsImage: icon)
+                    .resizable()
+                    .frame(width: 36, height: 36)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+            } else {
+                Image(systemName: "app.fill")
+                    .foregroundStyle(.blue)
+                    .font(.title2)
+                    .frame(width: 36, height: 36)
+            }
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(appURL.lastPathComponent)
-                    .font(.body).fontWeight(.medium)
-                Text(appURL.deletingLastPathComponent().lastPathComponent)
-                    .font(.caption).foregroundStyle(.secondary)
+                HStack(spacing: 6) {
+                    Text(info.displayName ?? appURL.lastPathComponent)
+                        .font(.body).fontWeight(.medium)
+                    if let version = info.version {
+                        Text("v\(version)")
+                            .font(.caption)
+                            .padding(.horizontal, 6).padding(.vertical, 2)
+                            .background(.blue.opacity(0.1))
+                            .clipShape(Capsule())
+                    }
+                }
+                HStack(spacing: 6) {
+                    if let folderInfo = info.folderVersionInfo {
+                        Text(folderInfo).font(.caption).foregroundStyle(.secondary)
+                    } else {
+                        Text(appURL.deletingLastPathComponent().lastPathComponent)
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                    if let build = info.buildNumber {
+                        Text("(\(build))").font(.caption).foregroundStyle(.tertiary)
+                    }
+                }
             }
 
             Spacer()
