@@ -120,42 +120,33 @@ public struct BuildListView: View {
 
     private func buildRow(_ appURL: URL) -> some View {
         let info = viewModel.appInfo(from: appURL)
-        return HStack(spacing: 12) {
+        return HStack(spacing: 16) {
             if let icon = info.iconImage {
                 Image(nsImage: icon)
                     .resizable()
-                    .frame(width: 36, height: 36)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .frame(width: 52, height: 52)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
             } else {
                 Image(systemName: "app.fill")
                     .foregroundStyle(.blue)
-                    .font(.title2)
-                    .frame(width: 36, height: 36)
+                    .font(.system(size: 32))
+                    .frame(width: 52, height: 52)
             }
 
-            VStack(alignment: .leading, spacing: 2) {
-                HStack(spacing: 6) {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 8) {
                     Text(info.displayName ?? appURL.lastPathComponent)
-                        .font(.body).fontWeight(.medium)
+                        .font(.title3).fontWeight(.semibold)
                     if let version = info.version {
                         Text("v\(version)")
                             .font(.caption)
-                            .padding(.horizontal, 6).padding(.vertical, 2)
+                            .padding(.horizontal, 8).padding(.vertical, 3)
                             .background(.blue.opacity(0.1))
                             .clipShape(Capsule())
                     }
                 }
-                HStack(spacing: 6) {
-                    if let folderInfo = info.folderVersionInfo {
-                        Text(folderInfo).font(.caption).foregroundStyle(.secondary)
-                    } else {
-                        Text(appURL.deletingLastPathComponent().lastPathComponent)
-                            .font(.caption).foregroundStyle(.secondary)
-                    }
-                    if let build = info.buildNumber {
-                        Text("(\(build))").font(.caption).foregroundStyle(.tertiary)
-                    }
-                }
+                Text(info.versionDescription)
+                    .font(.callout).foregroundStyle(.secondary)
             }
 
             Spacer()
@@ -164,6 +155,7 @@ public struct BuildListView: View {
                 appToInstall = IdentifiableURL(url: appURL)
             }
             .buttonStyle(.bordered)
+            .controlSize(.large)
 
             Button {
                 viewModel.deleteBuild(at: appURL)
@@ -173,9 +165,9 @@ public struct BuildListView: View {
             }
             .buttonStyle(.borderless)
         }
-        .padding(10)
+        .padding(16)
         .background(.background.secondary)
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .clipShape(RoundedRectangle(cornerRadius: 10))
     }
 
     // MARK: - Drop

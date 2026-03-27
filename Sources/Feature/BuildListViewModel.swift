@@ -132,13 +132,33 @@ public struct AppBundleInfo {
         return nil
     }
 
-    /// 폴더명에서 rc 정보 추출 (예: "18.18.0-rc.0+devDebug")
-    public var folderVersionInfo: String? {
-        let folderName = appURL.deletingLastPathComponent().lastPathComponent
-        // "18.17.0-rc.3+devDebug" 패턴 매칭
+    /// 폴더명 또는 앱 파일명에서 rc 정보 추출 (예: "18.18.0-rc.0+devDebug")
+    private func extractVersionPattern(from text: String) -> String? {
         guard let regex = try? NSRegularExpression(pattern: #"(\d+\.\d+\.\d+(?:-rc\.\d+)?(?:\+\w+)?)"#),
-              let match = regex.firstMatch(in: folderName, range: NSRange(folderName.startIndex..., in: folderName)),
-              let range = Range(match.range(at: 1), in: folderName) else { return nil }
-        return String(folderName[range])
+              let match = regex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)),
+              let range = Range(match.range(at: 1), in: text) else { return nil }
+        let result = String(text[range])
+        // 단순 버전번호만 나온 경우(예: "18.18.0")와 rc 정보가 있는 경우 구분
+        return result
+    }
+
+    /// 버전 설명 문자열 (rc, scheme 포함)
+    public var versionDescription: String {
+        // 1) 폴더명에서 시도
+        let folderName = appURL.deletingLastPathComponent().lastPathComponent
+        if let info = extractVersionPattern(from: folderName), info.contains("-") || info.contains("+") {
+            return info
+        }
+        // 2) .app 파일명에서 시도
+        let appName = appURL.deletingPathExtension().lastPathComponent
+        if let info = extractVersionPattern(from: appName), info.contains("-") || info.contains("+") {
+            return info
+        }
+        // 3) Info.plist 조합
+        var parts: [String] = []
+        if let v = version { parts.append(v) }
+        if let b = buildNumber { parts.append("Build \(b)") }
+        if let bid = bundleId { parts.append(bid) }
+        return parts.isEmpty ? appURL.lastPathComponent : parts.joined(separator: " · ")
     }
 }
