@@ -70,6 +70,10 @@ public final class DeviceListViewModel {
             devices = try await d
             runtimes = try await r
             deviceTypes = try await t
+            // 선택된 디바이스를 새 목록에서 갱신
+            if let selected = selectedDevice {
+                selectedDevice = devices.first { $0.udid == selected.udid }
+            }
         } catch {
             errorMessage = error.localizedDescription
         }
