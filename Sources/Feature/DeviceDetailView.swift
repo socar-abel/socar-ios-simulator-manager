@@ -33,6 +33,9 @@ struct DeviceDetailView: View {
                 }
             }
             .padding(24)
+            .onTapGesture {
+                NSApp.activate(ignoringOtherApps: true)
+            }
         }
         .fileImporter(
             isPresented: $showFilePicker,

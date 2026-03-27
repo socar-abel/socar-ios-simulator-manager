@@ -13,18 +13,23 @@ public struct FocusableTextField: NSViewRepresentable {
         self.onSubmit = onSubmit
     }
 
-    public func makeNSView(context: Context) -> ClickableTextField {
-        let field = ClickableTextField()
+    public func makeNSView(context: Context) -> FocusableNSTextField {
+        let field = FocusableNSTextField()
         field.placeholderString = placeholder
         field.delegate = context.coordinator
         field.bezelStyle = .roundedBezel
         field.font = .systemFont(ofSize: NSFont.systemFontSize)
         field.lineBreakMode = .byTruncatingTail
         field.cell?.truncatesLastVisibleLine = true
+        field.isBordered = true
+        field.isBezeled = true
+        field.isEditable = true
+        field.isSelectable = true
+        field.focusRingType = .exterior
         return field
     }
 
-    public func updateNSView(_ nsView: ClickableTextField, context: Context) {
+    public func updateNSView(_ nsView: FocusableNSTextField, context: Context) {
         if nsView.stringValue != text {
             nsView.stringValue = text
         }
@@ -56,22 +61,28 @@ public struct FocusableTextField: NSViewRepresentable {
     }
 }
 
-/// 클릭 시 자동으로 first responder를 가져오는 NSTextField
-public class ClickableTextField: NSTextField {
-    public override func mouseDown(with event: NSEvent) {
-        // 앱 자체를 활성화 + 윈도우를 key window로
-        NSApplication.shared.activate(ignoringOtherApps: true)
-        self.window?.makeKeyAndOrderFront(nil)
-        super.mouseDown(with: event)
-        self.window?.makeFirstResponder(self)
-    }
+public class FocusableNSTextField: NSTextField {
+    public override var acceptsFirstResponder: Bool { true }
 
     public override func becomeFirstResponder() -> Bool {
         let result = super.becomeFirstResponder()
-        // 포커스 획득 시 전체 텍스트 선택
-        if result, let editor = currentEditor() {
-            editor.selectAll(nil)
+        if result {
+            currentEditor()?.selectedRange = NSRange(location: stringValue.count, length: 0)
         }
         return result
     }
+
+    public override func mouseDown(with event: NSEvent) {
+        // 1. 앱을 활성화
+        NSApp.activate(ignoringOtherApps: true)
+        // 2. 윈도우를 key window로
+        window?.makeKeyAndOrderFront(nil)
+        // 3. 기본 mouseDown (텍스트 선택 등)
+        super.mouseDown(with: event)
+        // 4. 확실하게 first responder
+        window?.makeFirstResponder(self)
+    }
+
+    // NSViewRepresentable가 포커스를 가로채지 못하게
+    public override var needsPanelToBecomeKey: Bool { true }
 }
