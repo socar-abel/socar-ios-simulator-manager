@@ -13,46 +13,36 @@ public struct IOSVersionView: View {
     }
 
     public var body: some View {
-        ZStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 24) {
-                    diskUsageSection
-                    Divider()
-                    installedSection
-                    Divider()
-                    downloadableSection
-                    Divider()
-                    cleanupSection
-                }
-                .padding(24)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 24) {
+                diskUsageSection
+                Divider()
+                installedSection
+                Divider()
+                downloadableSection
+                Divider()
+                cleanupSection
             }
-
+            .padding(24)
+        }
+        .overlay {
             // 삭제 중 오버레이
             if viewModel.isDeleting {
-                Color.black.opacity(0.3)
-                    .ignoresSafeArea()
+                Color.black.opacity(0.3).ignoresSafeArea()
                 VStack(spacing: 16) {
-                    ProgressView()
-                        .scaleEffect(1.2)
-                    Text("iOS 버전 삭제 중...")
-                        .font(.headline)
-                        .foregroundStyle(.white)
+                    ProgressView().scaleEffect(1.2)
+                    Text("iOS 버전 삭제 중...").font(.headline).foregroundStyle(.white)
                 }
                 .padding(32)
                 .background(.ultraThinMaterial)
                 .clipShape(RoundedRectangle(cornerRadius: 16))
             }
-
             // 정리 중 오버레이
             if viewModel.isCleaning {
-                Color.black.opacity(0.3)
-                    .ignoresSafeArea()
+                Color.black.opacity(0.3).ignoresSafeArea()
                 VStack(spacing: 16) {
-                    ProgressView()
-                        .scaleEffect(1.2)
-                    Text("디바이스 정리 중...")
-                        .font(.headline)
-                        .foregroundStyle(.white)
+                    ProgressView().scaleEffect(1.2)
+                    Text("디바이스 정리 중...").font(.headline).foregroundStyle(.white)
                 }
                 .padding(32)
                 .background(.ultraThinMaterial)
@@ -68,6 +58,7 @@ public struct IOSVersionView: View {
                 if let success = viewModel.successMessage {
                     successBanner(success)
                         .padding(.horizontal, 16)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
                         .onAppear {
                             DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
                                 withAnimation { viewModel.dismissSuccess() }
@@ -75,8 +66,7 @@ public struct IOSVersionView: View {
                         }
                 }
             }
-            .padding(.bottom, 12)
-            .transition(.move(edge: .bottom).combined(with: .opacity))
+            .padding(.bottom, 24)
         }
         .animation(.easeInOut(duration: 0.25), value: viewModel.successMessage)
         .animation(.easeInOut(duration: 0.25), value: viewModel.errorMessage)
