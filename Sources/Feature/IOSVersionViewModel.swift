@@ -102,7 +102,6 @@ public final class IOSVersionViewModel {
         }
 
         do {
-            let beforeCount = installedIOSVersions.count
             try await useCase.downloadIOSVersionWithProgress(
                 platform: "iOS",
                 buildVersion: version.buildVersion
@@ -112,10 +111,11 @@ public final class IOSVersionViewModel {
                 }
             }
             downloadProgress = DownloadProgress(status: .installing)
-            // 설치 등록 완료까지 폴링 (최대 30초)
+            // 설치 등록 완료까지 폴링 (최대 30초) — 버전명으로 확인
+            let targetName = version.shortName
             for _ in 0..<15 {
                 await silentRefresh()
-                if installedIOSVersions.count > beforeCount {
+                if installedIOSVersions.contains(where: { $0.displayName == targetName }) {
                     break
                 }
                 try? await Task.sleep(for: .seconds(2))
