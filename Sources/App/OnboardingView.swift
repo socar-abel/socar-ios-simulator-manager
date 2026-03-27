@@ -48,8 +48,8 @@ struct OnboardingView: View {
                         )
                     } label: {
                         Label("App Store에서 Xcode 설치", systemImage: "arrow.down.app")
-                            .font(.title2)
-                            .frame(maxWidth: 480, minHeight: 64)
+                            .font(.title3)
+                            .frame(maxWidth: 384, minHeight: 51)
                     }
                     .buttonStyle(.borderedProminent).controlSize(.large)
 
@@ -62,8 +62,8 @@ struct OnboardingView: View {
                         )
                     } label: {
                         Label("내 macOS에 호환되는 버전 찾아서 설치", systemImage: "magnifyingglass")
-                            .font(.title2)
-                            .frame(maxWidth: 480, minHeight: 64)
+                            .font(.title3)
+                            .frame(maxWidth: 384, minHeight: 51)
                     }
                     .buttonStyle(.bordered).controlSize(.large)
                 }
@@ -77,7 +77,7 @@ struct OnboardingView: View {
             } label: {
                 Label("준비 완료! 시작하기", systemImage: "checkmark.circle")
                     .font(.title3)
-                    .frame(maxWidth: 480, minHeight: 56)
+                    .frame(maxWidth: 384, minHeight: 51)
             }
             .buttonStyle(.bordered).controlSize(.large)
         }
@@ -102,7 +102,7 @@ struct OnboardingView: View {
                     .foregroundStyle(isDone ? .secondary : .primary)
                     .strikethrough(isDone)
                 Text(description)
-                    .font(.body).foregroundStyle(.secondary)
+                    .font(.body).foregroundStyle(.secondary).
             }
         }
     }
