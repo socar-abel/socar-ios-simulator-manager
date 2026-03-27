@@ -55,27 +55,34 @@ public struct DeviceListView: View {
             }
         }
         .overlay(alignment: .bottom) {
-            if let success = viewModel.successMessage {
-                HStack(spacing: 8) {
-                    Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
-                    Text(success).font(.callout)
-                    Spacer()
-                    Button("닫기") { viewModel.dismissSuccess() }.buttonStyle(.borderless)
+            VStack(spacing: 8) {
+                if let error = viewModel.errorMessage {
+                    ErrorBanner(message: error) { viewModel.dismissError() }
+                        .padding(.horizontal, 16)
                 }
-                .padding(12)
-                .background(.green.opacity(0.9))
-                .clipShape(RoundedRectangle(cornerRadius: 8))
-                .padding(.horizontal, 16)
-                .padding(.bottom, 12)
-                .transition(.move(edge: .bottom).combined(with: .opacity))
-                .onAppear {
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
-                        withAnimation { viewModel.dismissSuccess() }
+                if let success = viewModel.successMessage {
+                    HStack(spacing: 8) {
+                        Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
+                        Text(success).font(.callout)
+                        Spacer()
+                        Button("닫기") { viewModel.dismissSuccess() }.buttonStyle(.borderless)
+                    }
+                    .padding(12)
+                    .background(.green.opacity(0.9))
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .padding(.horizontal, 16)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .onAppear {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                            withAnimation { viewModel.dismissSuccess() }
+                        }
                     }
                 }
             }
+            .padding(.bottom, 12)
         }
         .animation(.easeInOut(duration: 0.25), value: viewModel.successMessage)
+        .animation(.easeInOut(duration: 0.25), value: viewModel.errorMessage)
         .sheet(isPresented: $showCreateSheet) {
             CreateDeviceSheet(viewModel: viewModel)
         }

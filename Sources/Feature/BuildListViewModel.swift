@@ -6,6 +6,7 @@ import Domain
 public final class BuildListViewModel {
 
     public private(set) var isAdding = false
+    public private(set) var isDeleting = false
     public var errorMessage: String?
     public var successMessage: String?
 
@@ -40,8 +41,13 @@ public final class BuildListViewModel {
     }
 
     public func deleteBuild(at path: URL) {
+        isDeleting = true
+        defer { isDeleting = false }
+
+        let name = path.lastPathComponent
         do {
             try buildUseCase.deleteLocalBuild(at: path)
+            successMessage = "\(name) 삭제 완료"
         } catch {
             errorMessage = error.localizedDescription
         }

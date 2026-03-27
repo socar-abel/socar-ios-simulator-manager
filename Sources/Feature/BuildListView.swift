@@ -22,16 +22,30 @@ public struct BuildListView: View {
                 guideBanner
                 googleDriveSection
                 buildList
-
-                if let error = viewModel.errorMessage {
-                    ErrorBanner(message: error) { viewModel.dismissError() }
-                }
-                if let success = viewModel.successMessage {
-                    successBanner(success)
-                }
             }
             .padding(24)
         }
+        .overlay(alignment: .bottom) {
+            VStack(spacing: 8) {
+                if let error = viewModel.errorMessage {
+                    ErrorBanner(message: error) { viewModel.dismissError() }
+                        .padding(.horizontal, 16)
+                }
+                if let success = viewModel.successMessage {
+                    successBanner(success)
+                        .padding(.horizontal, 16)
+                        .onAppear {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                                withAnimation { viewModel.dismissSuccess() }
+                            }
+                        }
+                }
+            }
+            .padding(.bottom, 12)
+            .transition(.move(edge: .bottom).combined(with: .opacity))
+        }
+        .animation(.easeInOut(duration: 0.25), value: viewModel.successMessage)
+        .animation(.easeInOut(duration: 0.25), value: viewModel.errorMessage)
         .onDrop(of: [.fileURL], isTargeted: $isDropTargeted) { providers in
             handleDrop(providers)
         }

@@ -13,6 +13,7 @@ public final class IOSVersionViewModel {
     public private(set) var downloadingVersionName: String?
     public private(set) var isDeleting = false
     public private(set) var deletingVersionId: String?
+    public private(set) var isCleaning = false
     public var errorMessage: String?
     public var successMessage: String?
 
@@ -99,7 +100,10 @@ public final class IOSVersionViewModel {
     }
 
     public func cleanupUnavailableDevices() async {
+        isCleaning = true
         errorMessage = nil
+        defer { isCleaning = false }
+
         do {
             try await useCase.deleteAllUnavailableDevices()
             successMessage = "사용 불가능한 디바이스가 정리되었습니다."
