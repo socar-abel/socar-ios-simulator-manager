@@ -211,6 +211,7 @@ struct InstallTargetSheet: View {
     let onDismiss: () -> Void
 
     @State private var bootedDevices: [SimulatorDevice] = []
+    @State private var isLoadingDevices = true
     @State private var isInstalling = false
     @State private var installError: String?
 
@@ -241,6 +242,9 @@ struct InstallTargetSheet: View {
                     Text("설치 중...").font(.callout).foregroundStyle(.secondary)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if isLoadingDevices {
+                ProgressView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if bootedDevices.isEmpty {
                 ContentUnavailableView(
                     "실행중인 디바이스가 없습니다",
@@ -273,7 +277,10 @@ struct InstallTargetSheet: View {
             }
         }
         .frame(width: 450, height: 350)
-        .task { bootedDevices = await viewModel.bootedDevices() }
+        .task {
+            bootedDevices = await viewModel.bootedDevices()
+            isLoadingDevices = false
+        }
     }
 
     private func install(on device: SimulatorDevice) {
