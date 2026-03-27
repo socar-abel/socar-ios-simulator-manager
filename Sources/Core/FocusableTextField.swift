@@ -13,8 +13,8 @@ public struct FocusableTextField: NSViewRepresentable {
         self.onSubmit = onSubmit
     }
 
-    public func makeNSView(context: Context) -> NSTextField {
-        let field = NSTextField()
+    public func makeNSView(context: Context) -> ClickableTextField {
+        let field = ClickableTextField()
         field.placeholderString = placeholder
         field.delegate = context.coordinator
         field.bezelStyle = .roundedBezel
@@ -24,7 +24,7 @@ public struct FocusableTextField: NSViewRepresentable {
         return field
     }
 
-    public func updateNSView(_ nsView: NSTextField, context: Context) {
+    public func updateNSView(_ nsView: ClickableTextField, context: Context) {
         if nsView.stringValue != text {
             nsView.stringValue = text
         }
@@ -53,5 +53,25 @@ public struct FocusableTextField: NSViewRepresentable {
             }
             return false
         }
+    }
+}
+
+/// 클릭 시 자동으로 first responder를 가져오는 NSTextField
+public class ClickableTextField: NSTextField {
+    public override func mouseDown(with event: NSEvent) {
+        super.mouseDown(with: event)
+        // 클릭 시 강제로 first responder 획득
+        if let window = self.window, window.firstResponder != self.currentEditor() {
+            window.makeFirstResponder(self)
+        }
+    }
+
+    public override func becomeFirstResponder() -> Bool {
+        let result = super.becomeFirstResponder()
+        // 포커스 획득 시 전체 텍스트 선택
+        if result, let editor = currentEditor() {
+            editor.selectAll(nil)
+        }
+        return result
     }
 }
