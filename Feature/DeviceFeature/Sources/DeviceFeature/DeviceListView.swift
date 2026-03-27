@@ -6,6 +6,7 @@ public struct DeviceListView: View {
 
     @Bindable var viewModel: DeviceListViewModel
     @State private var showCreateSheet = false
+    @State private var showDeleteSelectedConfirmation = false
 
     public init(viewModel: DeviceListViewModel) {
         self.viewModel = viewModel
@@ -14,7 +15,7 @@ public struct DeviceListView: View {
     public var body: some View {
         HStack(spacing: 0) {
             listPanel
-                .frame(width: 320)
+                .frame(minWidth: 320, idealWidth: 360)
             Divider()
             detailPanel
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -24,9 +25,8 @@ public struct DeviceListView: View {
         }
         .toolbar {
             ToolbarItem {
-                Button { showCreateSheet = true } label: {
-                    Label("디바이스 생성", systemImage: "plus")
-                }
+                Button("디바이스 추가") { showCreateSheet = true }
+                    .buttonStyle(.bordered)
             }
             ToolbarItem {
                 Button { Task { await viewModel.refreshAll() } } label: {
@@ -35,23 +35,24 @@ public struct DeviceListView: View {
             }
         }
         .task { await viewModel.onAppear() }
+        .confirmationDialog(
+            "\(viewModel.selectedCount)개 디바이스를 삭제하시겠습니까?",
+            isPresented: $showDeleteSelectedConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("삭제 (\(viewModel.selectedCount)개)", role: .destructive) {
+                Task { await viewModel.deleteSelected() }
+            }
+        } message: {
+            Text("선택한 디바이스가 모두 삭제됩니다. 이 작업은 되돌릴 수 없습니다.")
+        }
     }
 
     // MARK: - List
 
     private var listPanel: some View {
         VStack(spacing: 0) {
-            HStack {
-                Text("디바이스")
-                    .font(.headline)
-                Spacer()
-                Text("\(viewModel.devices.count)개")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
-
+            listHeader
             Divider()
 
             if viewModel.isLoading && viewModel.devices.isEmpty {
@@ -61,38 +62,126 @@ public struct DeviceListView: View {
                 ContentUnavailableView(
                     "디바이스가 없습니다",
                     systemImage: "iphone.slash",
-                    description: Text("디바이스 생성 버튼을 눌러주세요")
+                    description: Text("상단의 '디바이스 추가' 버튼을 눌러주세요")
                 )
             } else {
-                List(selection: $viewModel.selectedDevice) {
-                    let booted = viewModel.devices.filter(\.isBooted)
-                    if !booted.isEmpty {
-                        Section("실행중") {
-                            ForEach(booted) { device in
-                                DeviceRowView(device: device).tag(device)
-                            }
-                        }
-                    }
-                    let shutdown = viewModel.devices.filter(\.isShutdown)
-                    if !shutdown.isEmpty {
-                        Section("종료됨") {
-                            ForEach(shutdown) { device in
-                                DeviceRowView(device: device).tag(device)
-                            }
+                deviceList
+            }
+        }
+    }
+
+    private var listHeader: some View {
+        HStack {
+            if viewModel.isMultiSelectMode {
+                Button("전체 선택") { viewModel.selectAll() }
+                    .buttonStyle(.borderless).font(.caption)
+                Button("선택 해제") { viewModel.deselectAll() }
+                    .buttonStyle(.borderless).font(.caption)
+                Spacer()
+                Button("취소") { viewModel.exitMultiSelectMode() }
+                    .buttonStyle(.borderless).font(.caption)
+            } else {
+                Text("디바이스")
+                    .font(.headline)
+                Spacer()
+                Text("\(viewModel.devices.count)개")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Button("선택") { viewModel.isMultiSelectMode = true }
+                    .buttonStyle(.borderless).font(.caption)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+    }
+
+    private var deviceList: some View {
+        VStack(spacing: 0) {
+            List {
+                let booted = viewModel.devices.filter(\.isBooted)
+                if !booted.isEmpty {
+                    Section("실행중") {
+                        ForEach(booted) { device in
+                            deviceRow(device)
                         }
                     }
                 }
-                .listStyle(.inset)
+                let shutdown = viewModel.devices.filter(\.isShutdown)
+                if !shutdown.isEmpty {
+                    Section("종료됨") {
+                        ForEach(shutdown) { device in
+                            deviceRow(device)
+                        }
+                    }
+                }
+                // Booted/Shutdown 외 기타 상태
+                let other = viewModel.devices.filter { !$0.isBooted && !$0.isShutdown }
+                if !other.isEmpty {
+                    Section("기타") {
+                        ForEach(other) { device in
+                            deviceRow(device)
+                        }
+                    }
+                }
+            }
+            .listStyle(.inset)
+
+            if viewModel.isMultiSelectMode && viewModel.selectedCount > 0 {
+                deleteBar
             }
         }
+    }
+
+    private func deviceRow(_ device: SimulatorDevice) -> some View {
+        HStack(spacing: 8) {
+            if viewModel.isMultiSelectMode {
+                Image(systemName: viewModel.isSelected(device) ? "checkmark.circle.fill" : "circle")
+                    .foregroundStyle(viewModel.isSelected(device) ? .blue : .secondary)
+                    .font(.title3)
+            }
+            DeviceRowView(device: device)
+        }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            if viewModel.isMultiSelectMode {
+                viewModel.toggleSelection(device)
+            } else {
+                viewModel.selectedDevice = device
+            }
+        }
+    }
+
+    private var deleteBar: some View {
+        HStack {
+            Text("\(viewModel.selectedCount)개 선택됨")
+                .font(.callout).fontWeight(.medium)
+            Spacer()
+            Button(role: .destructive) {
+                showDeleteSelectedConfirmation = true
+            } label: {
+                Label("선택 삭제", systemImage: "trash")
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(.red)
+            .disabled(viewModel.isDeleting)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+        .background(.bar)
     }
 
     // MARK: - Detail
 
     @ViewBuilder
     private var detailPanel: some View {
-        if let device = viewModel.selectedDevice {
+        if let device = viewModel.selectedDevice, !viewModel.isMultiSelectMode {
             DeviceDetailView(device: device, viewModel: viewModel)
+        } else if viewModel.isMultiSelectMode {
+            ContentUnavailableView(
+                "디바이스를 선택하세요",
+                systemImage: "checkmark.circle",
+                description: Text("삭제할 디바이스를 체크한 후 하단의 '선택 삭제' 버튼을 눌러주세요")
+            )
         } else {
             ContentUnavailableView(
                 "디바이스를 선택하세요",

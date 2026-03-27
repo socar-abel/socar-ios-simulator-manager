@@ -8,9 +8,44 @@ public final class DeviceListViewModel {
     public private(set) var runtimes: [SimulatorIOSVersion] = []
     public private(set) var deviceTypes: [SimulatorDeviceType] = []
     public private(set) var isLoading = false
+    public private(set) var isDeleting = false
     public var errorMessage: String?
 
     public var selectedDevice: SimulatorDevice?
+
+    // MARK: - Multi Selection
+
+    public var selectedUDIDs: Set<String> = []
+    public var isMultiSelectMode = false
+
+    public var selectedCount: Int { selectedUDIDs.count }
+
+    public func toggleSelection(_ device: SimulatorDevice) {
+        if selectedUDIDs.contains(device.udid) {
+            selectedUDIDs.remove(device.udid)
+        } else {
+            selectedUDIDs.insert(device.udid)
+        }
+    }
+
+    public func isSelected(_ device: SimulatorDevice) -> Bool {
+        selectedUDIDs.contains(device.udid)
+    }
+
+    public func selectAll() {
+        selectedUDIDs = Set(devices.map(\.udid))
+    }
+
+    public func deselectAll() {
+        selectedUDIDs.removeAll()
+    }
+
+    public func exitMultiSelectMode() {
+        isMultiSelectMode = false
+        selectedUDIDs.removeAll()
+    }
+
+    // MARK: - Dependencies
 
     private let useCase: any SimulatorUseCaseInterface
 
@@ -68,6 +103,32 @@ public final class DeviceListViewModel {
             await refreshAll()
         } catch {
             errorMessage = error.localizedDescription
+        }
+    }
+
+    public func deleteSelected() async {
+        guard !selectedUDIDs.isEmpty else { return }
+        isDeleting = true
+        errorMessage = nil
+        defer { isDeleting = false }
+
+        var failCount = 0
+        for udid in selectedUDIDs {
+            do {
+                try await useCase.deleteDevice(udid: udid)
+            } catch {
+                failCount += 1
+            }
+        }
+
+        let deletedCount = selectedUDIDs.count - failCount
+        selectedUDIDs.removeAll()
+        selectedDevice = nil
+        isMultiSelectMode = false
+        await refreshAll()
+
+        if failCount > 0 {
+            errorMessage = "\(deletedCount)개 삭제 완료, \(failCount)개 삭제 실패"
         }
     }
 
