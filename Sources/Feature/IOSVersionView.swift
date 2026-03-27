@@ -125,11 +125,18 @@ public struct IOSVersionView: View {
     }
 
     private func installedRow(_ version: InstalledIOSVersion) -> some View {
-        HStack(spacing: 12) {
-            Image(systemName: "cpu")
-                .font(.title2)
-                .foregroundStyle(version.isReady ? .blue : .secondary)
-                .frame(width: 28)
+        let isBeingDeleted = viewModel.deletingVersionId == version.identifier
+        return HStack(spacing: 12) {
+            if isBeingDeleted {
+                ProgressView()
+                    .scaleEffect(0.8)
+                    .frame(width: 28)
+            } else {
+                Image(systemName: "cpu")
+                    .font(.title2)
+                    .foregroundStyle(version.isReady ? .blue : .secondary)
+                    .frame(width: 28)
+            }
 
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 6) {
@@ -139,6 +146,11 @@ public struct IOSVersionView: View {
                         .padding(.horizontal, 6).padding(.vertical, 2)
                         .background(.blue.opacity(0.1))
                         .clipShape(Capsule())
+                    if isBeingDeleted {
+                        Text("삭제 중...")
+                            .font(.caption).fontWeight(.medium)
+                            .foregroundStyle(.red)
+                    }
                 }
                 HStack(spacing: 8) {
                     Text(version.displaySize).font(.caption).foregroundStyle(.secondary)
@@ -159,8 +171,9 @@ public struct IOSVersionView: View {
             }
         }
         .padding(10)
-        .background(.background.secondary)
+        .background(isBeingDeleted ? Color.red.opacity(0.05) : Color(.controlBackgroundColor))
         .clipShape(RoundedRectangle(cornerRadius: 8))
+        .opacity(isBeingDeleted ? 0.7 : 1)
     }
 
     // MARK: - Downloadable

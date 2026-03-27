@@ -12,6 +12,7 @@ public final class IOSVersionViewModel {
     public private(set) var isDownloading = false
     public private(set) var downloadingVersionName: String?
     public private(set) var isDeleting = false
+    public private(set) var deletingVersionId: String?
     public var errorMessage: String?
     public var successMessage: String?
 
@@ -59,12 +60,18 @@ public final class IOSVersionViewModel {
             return
         }
         isDeleting = true
+        deletingVersionId = version.identifier
         errorMessage = nil
-        defer { isDeleting = false }
+        defer {
+            isDeleting = false
+            deletingVersionId = nil
+        }
 
         do {
             try await useCase.deleteIOSVersion(identifier: version.identifier)
             successMessage = "\(version.displayName)이(가) 삭제되었습니다."
+            // 파일시스템 정리 대기 후 디스크 사용량 갱신
+            try? await Task.sleep(for: .seconds(1))
             await refreshAll()
             await loadDownloadableVersions()
         } catch {
