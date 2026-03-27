@@ -20,6 +20,7 @@ public struct BuildListView: View {
             VStack(alignment: .leading, spacing: 24) {
                 header
                 guideBanner
+                googleDriveSection
                 buildList
 
                 if let error = viewModel.errorMessage {
@@ -94,17 +95,43 @@ public struct BuildListView: View {
         .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 
+    private var googleDriveSection: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "link")
+                .foregroundStyle(.blue)
+                .font(.title3)
+            VStack(alignment: .leading, spacing: 2) {
+                Button("Google Drive에서 빌드 다운로드") {
+                    if let url = URL(string: "https://drive.google.com/drive/folders/1GC85ktjO9OInB5IEVf7Wzd3laLuTegTs") {
+                        NSWorkspace.shared.open(url)
+                    }
+                }
+                .buttonStyle(.link)
+                Text("권한이 없다면 모바일팀에 문의주세요.")
+                    .font(.caption).foregroundStyle(.tertiary)
+            }
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.blue.opacity(0.04))
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+    }
+
     // MARK: - Build List
 
     private var buildList: some View {
         let apps = viewModel.localApps()
         return Group {
             if apps.isEmpty {
-                ContentUnavailableView(
-                    "저장된 빌드가 없습니다",
-                    systemImage: "app.dashed",
-                    description: Text("파일을 추가하거나 여기로 드래그하세요.")
-                )
+                VStack(spacing: 12) {
+                    Image(systemName: "app.dashed")
+                        .font(.system(size: 36))
+                        .foregroundStyle(.secondary)
+                    Text("저장된 빌드가 없습니다")
+                        .font(.headline).foregroundStyle(.secondary)
+                    Text("파일을 추가하거나 여기로 드래그하세요.")
+                        .font(.caption).foregroundStyle(.tertiary)
+                }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 40)
             } else {
@@ -264,11 +291,16 @@ struct InstallTargetSheet: View {
                 ProgressView()
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if bootedDevices.isEmpty {
-                ContentUnavailableView(
-                    "실행중인 디바이스가 없습니다",
-                    systemImage: "iphone.slash",
-                    description: Text("먼저 디바이스를 부팅해주세요.")
-                )
+                VStack(spacing: 12) {
+                    Image(systemName: "iphone.slash")
+                        .font(.system(size: 36))
+                        .foregroundStyle(.secondary)
+                    Text("실행중인 디바이스가 없습니다")
+                        .font(.headline).foregroundStyle(.secondary)
+                    Text("먼저 디바이스를 부팅해주세요.")
+                        .font(.caption).foregroundStyle(.tertiary)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 List {
                     ForEach(bootedDevices) { device in

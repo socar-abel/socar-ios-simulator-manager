@@ -8,6 +8,7 @@ enum AppRoute: Hashable {
     case devices
     case builds
     case iosVersions
+    case guide
 }
 
 @Observable

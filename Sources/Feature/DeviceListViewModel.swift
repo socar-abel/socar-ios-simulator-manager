@@ -131,7 +131,7 @@ public final class DeviceListViewModel {
         do {
             try await useCase.bootDevice(udid: udid)
             try? await useCase.bringSimulatorToFront()
-            await refreshAll()
+            await refreshUntilState(udid: udid, expectedState: "Booted")
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -141,9 +141,20 @@ public final class DeviceListViewModel {
         errorMessage = nil
         do {
             try await useCase.shutdownDevice(udid: udid)
-            await refreshAll()
+            await refreshUntilState(udid: udid, expectedState: "Shutdown")
         } catch {
             errorMessage = error.localizedDescription
+        }
+    }
+
+    /// 상태가 반영될 때까지 최대 5회 폴링
+    private func refreshUntilState(udid: String, expectedState: String) async {
+        for _ in 0..<5 {
+            await refreshAll()
+            if devices.first(where: { $0.udid == udid })?.state == expectedState {
+                return
+            }
+            try? await Task.sleep(for: .milliseconds(500))
         }
     }
 

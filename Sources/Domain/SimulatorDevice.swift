@@ -9,6 +9,7 @@ public struct SimulatorDevice: Identifiable, Hashable, Sendable {
     public var runtimeIdentifier: String?
 
     public var id: String { udid }
+    public var compositeId: String { "\(udid)-\(state)" }
     public var isBooted: Bool { state == "Booted" }
     public var isShutdown: Bool { state == "Shutdown" }
 

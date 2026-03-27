@@ -59,11 +59,16 @@ public struct DeviceListView: View {
                 ProgressView()
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if viewModel.devices.isEmpty {
-                ContentUnavailableView(
-                    "디바이스가 없습니다",
-                    systemImage: "iphone.slash",
-                    description: Text("상단의 '디바이스 추가' 버튼을 눌러주세요")
-                )
+                VStack(spacing: 12) {
+                    Image(systemName: "iphone.slash")
+                        .font(.system(size: 36))
+                        .foregroundStyle(.secondary)
+                    Text("디바이스가 없습니다")
+                        .font(.headline).foregroundStyle(.secondary)
+                    Text("상단의 '디바이스 추가' 버튼을 눌러주세요")
+                        .font(.caption).foregroundStyle(.tertiary)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 deviceList
             }
@@ -127,7 +132,7 @@ public struct DeviceListView: View {
                     let booted = sorted.filter(\.isBooted)
                     if !booted.isEmpty {
                         Section {
-                            ForEach(booted) { device in
+                            ForEach(booted, id: \SimulatorDevice.compositeId) { device in
                                 deviceRow(device)
                                 Divider().padding(.leading, 40)
                             }
@@ -138,7 +143,7 @@ public struct DeviceListView: View {
                     let shutdown = sorted.filter(\.isShutdown)
                     if !shutdown.isEmpty {
                         Section {
-                            ForEach(shutdown) { device in
+                            ForEach(shutdown, id: \SimulatorDevice.compositeId) { device in
                                 deviceRow(device)
                                 Divider().padding(.leading, 40)
                             }
@@ -149,7 +154,7 @@ public struct DeviceListView: View {
                     let other = sorted.filter { !$0.isBooted && !$0.isShutdown }
                     if !other.isEmpty {
                         Section {
-                            ForEach(other) { device in
+                            ForEach(other, id: \SimulatorDevice.compositeId) { device in
                                 deviceRow(device)
                                 Divider().padding(.leading, 40)
                             }
@@ -177,7 +182,9 @@ public struct DeviceListView: View {
     }
 
     private func deviceRow(_ device: SimulatorDevice) -> some View {
-        HStack(spacing: 8) {
+        let isSelected = viewModel.selectedDevice?.udid == device.udid && !viewModel.isMultiSelectMode
+
+        return HStack(spacing: 8) {
             if viewModel.isMultiSelectMode {
                 Image(systemName: viewModel.isSelected(device) ? "checkmark.circle.fill" : "circle")
                     .foregroundStyle(viewModel.isSelected(device) ? .blue : .secondary)
@@ -185,6 +192,11 @@ public struct DeviceListView: View {
             }
             DeviceRowView(device: device, profile: viewModel.profile(for: device))
         }
+        .padding(.vertical, 2)
+        .background(
+            RoundedRectangle(cornerRadius: 6)
+                .fill(isSelected ? Color.accentColor.opacity(0.15) : Color.clear)
+        )
         .contentShape(Rectangle())
         .onTapGesture {
             if viewModel.isMultiSelectMode {
@@ -221,16 +233,25 @@ public struct DeviceListView: View {
         if viewModel.selectedDevice != nil, !viewModel.isMultiSelectMode {
             DeviceDetailView(viewModel: viewModel)
         } else if viewModel.isMultiSelectMode {
-            ContentUnavailableView(
-                "디바이스를 선택하세요",
-                systemImage: "checkmark.circle",
-                description: Text("삭제할 디바이스를 체크한 후 하단의 '선택 삭제' 버튼을 눌러주세요")
-            )
+            VStack(spacing: 12) {
+                Image(systemName: "checkmark.circle")
+                    .font(.system(size: 36))
+                    .foregroundStyle(.secondary)
+                Text("디바이스를 선택하세요")
+                    .font(.headline).foregroundStyle(.secondary)
+                Text("삭제할 디바이스를 체크한 후 하단의 '선택 삭제' 버튼을 눌러주세요")
+                    .font(.caption).foregroundStyle(.tertiary)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
-            ContentUnavailableView(
-                "디바이스를 선택하세요",
-                systemImage: "hand.tap"
-            )
+            VStack(spacing: 12) {
+                Image(systemName: "hand.tap")
+                    .font(.system(size: 36))
+                    .foregroundStyle(.secondary)
+                Text("디바이스를 선택하세요")
+                    .font(.headline).foregroundStyle(.secondary)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
 }

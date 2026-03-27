@@ -28,6 +28,9 @@ struct MainView: View {
                 .tag(AppRoute.builds)
             Label("iOS 버전", systemImage: "cpu")
                 .tag(AppRoute.iosVersions)
+            Divider()
+            Label("가이드", systemImage: "book")
+                .tag(AppRoute.guide)
         }
         .listStyle(.sidebar)
     }
@@ -71,6 +74,8 @@ struct MainView: View {
             if let vm = coordinator.iosVersionViewModel {
                 IOSVersionView(viewModel: vm)
             }
+        case .guide:
+            GuideView()
         }
     }
 }
