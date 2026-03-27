@@ -149,6 +149,7 @@ public struct DeviceListView: View {
                 }
             }
             .listStyle(.inset)
+            .focusable(false)
 
             if viewModel.isMultiSelectMode && viewModel.selectedCount > 0 {
                 deleteBar

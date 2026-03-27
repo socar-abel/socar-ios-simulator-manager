@@ -33,9 +33,6 @@ struct DeviceDetailView: View {
                 }
             }
             .padding(24)
-            .onTapGesture {
-                NSApp.activate(ignoringOtherApps: true)
-            }
         }
         .fileImporter(
             isPresented: $showFilePicker,
@@ -100,9 +97,9 @@ struct DeviceDetailView: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("딥링크").font(.headline)
             HStack(spacing: 8) {
-                FocusableTextField("socar-v2://path 또는 https://...", text: $deepLinkURL) {
-                    openDeepLink()
-                }
+                TextField("socar-v2://path 또는 https://...", text: $deepLinkURL)
+                    .textFieldStyle(.roundedBorder)
+                    .onSubmit { openDeepLink() }
                 Button("실행") { openDeepLink() }
                     .buttonStyle(.borderedProminent)
                     .disabled(deepLinkURL.trimmingCharacters(in: .whitespaces).isEmpty || isPerformingAction)
