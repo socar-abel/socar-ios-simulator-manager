@@ -15,6 +15,8 @@ public protocol SimulatorRepositoryInterface: Sendable {
     func launchApp(udid: String, bundleId: String) async throws
     func openURL(udid: String, url: String) async throws
     func openSimulatorApp() async throws
+    func listInstalledApps(udid: String) async throws -> Set<String>
+    func bringSimulatorToFront() async throws
 
     // iOS 버전 관리
     func listInstalledIOSVersions() async throws -> [InstalledIOSVersion]

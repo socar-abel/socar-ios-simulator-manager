@@ -48,6 +48,20 @@ public final class BuildListViewModel {
 
     public func installOnDevice(appURL: URL, udid: String) async throws {
         try await simulatorUseCase.installApp(udid: udid, appPath: appURL)
+        try? await simulatorUseCase.bringSimulatorToFront()
+    }
+
+    public func isAppInstalled(appURL: URL, udid: String) async -> Bool {
+        guard let bundleId = bundleIdentifier(from: appURL) else { return false }
+        return (try? await simulatorUseCase.isAppInstalled(udid: udid, bundleId: bundleId)) ?? false
+    }
+
+    private func bundleIdentifier(from appURL: URL) -> String? {
+        let plistURL = appURL.appendingPathComponent("Info.plist")
+        guard let data = try? Data(contentsOf: plistURL),
+              let plist = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any],
+              let bundleId = plist["CFBundleIdentifier"] as? String else { return nil }
+        return bundleId
     }
 
     public func bootedDevices() async -> [SimulatorDevice] {

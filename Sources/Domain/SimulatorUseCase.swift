@@ -69,6 +69,15 @@ public final class SimulatorUseCase<Dependency: SimulatorUseCaseDependency>: Sim
         try await dependency.repository.openURL(udid: udid, url: url)
     }
 
+    public func isAppInstalled(udid: String, bundleId: String) async throws -> Bool {
+        let installedApps = try await dependency.repository.listInstalledApps(udid: udid)
+        return installedApps.contains(bundleId)
+    }
+
+    public func bringSimulatorToFront() async throws {
+        try await dependency.repository.bringSimulatorToFront()
+    }
+
     // MARK: - Runtime Management
 
     public func fetchInstalledIOSVersions() async throws -> [InstalledIOSVersion] {

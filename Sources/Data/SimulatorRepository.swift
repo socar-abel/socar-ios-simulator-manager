@@ -132,6 +132,38 @@ public final class SimulatorRepository<Dependency: SimulatorRepositoryDependency
         )
     }
 
+    public func listInstalledApps(udid: String) async throws -> Set<String> {
+        let result = try await dependency.shell.simctlArgs(["listapps", udid])
+        guard result.isSuccess else {
+            throw SimulatorRepositoryError.commandFailed(result.stderr)
+        }
+        // plist → JSON 변환
+        let tempPlist = FileManager.default.temporaryDirectory.appendingPathComponent("apps_\(udid).plist")
+        let tempJSON = FileManager.default.temporaryDirectory.appendingPathComponent("apps_\(udid).json")
+        try result.stdout.data(using: .utf8)?.write(to: tempPlist)
+        defer {
+            try? FileManager.default.removeItem(at: tempPlist)
+            try? FileManager.default.removeItem(at: tempJSON)
+        }
+
+        let convertResult = try await dependency.shell.run(
+            executable: "/usr/bin/plutil",
+            arguments: ["-convert", "json", "-o", tempJSON.path, tempPlist.path]
+        )
+        guard convertResult.isSuccess else { return [] }
+
+        let jsonData = try Data(contentsOf: tempJSON)
+        guard let dict = try JSONSerialization.jsonObject(with: jsonData) as? [String: Any] else { return [] }
+        return Set(dict.keys)
+    }
+
+    public func bringSimulatorToFront() async throws {
+        _ = try await dependency.shell.run(
+            executable: "/usr/bin/open",
+            arguments: ["-a", "Simulator"]
+        )
+    }
+
     // MARK: - Runtime Management
 
     public func listInstalledIOSVersions() async throws -> [InstalledIOSVersion] {
