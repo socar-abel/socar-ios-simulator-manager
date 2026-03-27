@@ -17,13 +17,10 @@ import IOSVersionFeature
 @MainActor
 final class AppAssembly {
 
-    private let defaultFolderId = "1GC85ktjO9OInB5IEVf7Wzd3laLuTegTs"
-
     // MARK: - Shared Instances
 
     private var _shell: ShellService?
     private let fileRepository = FileRepository()
-    private let keychainRepository = KeychainRepository()
 
     // MARK: - Shell
 
@@ -46,24 +43,8 @@ final class AppAssembly {
 
     // MARK: - Build
 
-    func buildUseCase() throws -> (any BuildUseCaseInterface)? {
-        guard let keyData = try keychainRepository.retrieveServiceAccountJSON() else {
-            return nil
-        }
-        let driveRepo = try GoogleDriveRepository(serviceAccountJSON: keyData)
-        let component = BuildUseCaseComponent(
-            buildRepository: driveRepo,
-            fileRepository: fileRepository
-        )
-        return BuildUseCase(dependency: component)
-    }
-
-    func buildUseCaseWithFallback() throws -> any BuildUseCaseInterface {
-        if let useCase = try buildUseCase() { return useCase }
-        let component = BuildUseCaseComponent(
-            buildRepository: NullBuildRepository(),
-            fileRepository: fileRepository
-        )
+    func buildUseCase() -> any BuildUseCaseInterface {
+        let component = BuildUseCaseComponent(fileRepository: fileRepository)
         return BuildUseCase(dependency: component)
     }
 
@@ -81,14 +62,9 @@ final class AppAssembly {
     }
 
     func buildListViewModel() async throws -> BuildListViewModel {
-        let simUseCase = try await simulatorUseCase()
-        let buildUC = try buildUseCaseWithFallback()
-        let isDriveConfigured = (try? keychainRepository.retrieveServiceAccountJSON()) != nil
-        return BuildListViewModel(
-            buildUseCase: buildUC,
-            simulatorUseCase: simUseCase,
-            folderId: defaultFolderId,
-            isDriveConfigured: isDriveConfigured
+        BuildListViewModel(
+            buildUseCase: buildUseCase(),
+            simulatorUseCase: try await simulatorUseCase()
         )
     }
 
@@ -97,19 +73,6 @@ final class AppAssembly {
     }
 
     func settingsViewModel() -> SettingsViewModel {
-        SettingsViewModel(
-            keychainRepository: keychainRepository,
-            environmentCheckUseCase: environmentCheckUseCase(),
-            defaultFolderId: defaultFolderId
-        )
-    }
-}
-
-// MARK: - Null Build Repository (Drive 미설정 시 fallback)
-
-private struct NullBuildRepository: BuildRepositoryInterface {
-    func listFiles(folderId: String) async throws -> [RemoteFile] { [] }
-    func downloadFile(fileId: String, to destination: URL, progress: @escaping @Sendable (Double) -> Void) async throws -> URL {
-        throw GoogleDriveError.downloadFailed
+        SettingsViewModel(environmentCheckUseCase: environmentCheckUseCase())
     }
 }

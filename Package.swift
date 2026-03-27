@@ -72,7 +72,7 @@ let package = Package(
         ),
         .target(
             name: "SettingsFeature",
-            dependencies: ["BuildDomainInterface", "EnvironmentDomain", "Design"],
+            dependencies: ["EnvironmentDomain", "Design"],
             path: "Feature/SettingsFeature/Sources/SettingsFeature"
         ),
         .target(

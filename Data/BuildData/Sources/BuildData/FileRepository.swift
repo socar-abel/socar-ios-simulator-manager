@@ -71,6 +71,17 @@ public final class FileRepository: FileRepositoryInterface {
         }
     }
 
+    public func copyToBuildDirectory(from source: URL) throws -> URL {
+        let destination = buildsDirectory.appendingPathComponent(source.lastPathComponent)
+        if FileManager.default.fileExists(atPath: destination.path) {
+            try FileManager.default.removeItem(at: destination)
+        }
+        _ = source.startAccessingSecurityScopedResource()
+        defer { source.stopAccessingSecurityScopedResource() }
+        try FileManager.default.copyItem(at: source, to: destination)
+        return destination
+    }
+
     private func findAppBundle(in directory: URL) -> URL? {
         guard let enumerator = FileManager.default.enumerator(
             at: directory,

@@ -10,6 +10,8 @@ public struct BuildListView: View {
     @State private var showFilePicker = false
     @State private var showInstallSheet = false
     @State private var appToInstall: URL?
+    @State private var isDropTargeted = false
+    @State private var refreshId = UUID()
 
     public init(viewModel: BuildListViewModel) {
         self.viewModel = viewModel
@@ -18,20 +20,35 @@ public struct BuildListView: View {
     public var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
-                localSection
-                Divider()
-                driveSection
+                header
+                guideBanner
+                buildList
+
+                if let error = viewModel.errorMessage {
+                    ErrorBanner(message: error) { viewModel.dismissError() }
+                }
+                if let success = viewModel.successMessage {
+                    successBanner(success)
+                }
             }
             .padding(24)
+        }
+        .onDrop(of: [.fileURL], isTargeted: $isDropTargeted) { providers in
+            handleDrop(providers)
+        }
+        .overlay {
+            if isDropTargeted {
+                dropOverlay
+            }
         }
         .fileImporter(
             isPresented: $showFilePicker,
             allowedContentTypes: [.application, .zip],
-            allowsMultipleSelection: false
+            allowsMultipleSelection: true
         ) { result in
-            if case .success(let urls) = result, let url = urls.first, url.pathExtension == "zip" {
-                Task {
-                    do { _ = try await viewModel.downloadBuild } catch {}
+            if case .success(let urls) = result {
+                for url in urls {
+                    Task { await viewModel.addBuild(from: url) ; refreshId = UUID() }
                 }
             }
         }
@@ -42,111 +59,150 @@ public struct BuildListView: View {
                 }
             }
         }
-        .task { await viewModel.onAppear() }
     }
 
-    // MARK: - Local
+    // MARK: - Header
 
-    private var localSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text("로컬 빌드").font(.headline)
-                Spacer()
-                Button { showFilePicker = true } label: {
-                    Label("파일 추가", systemImage: "plus")
+    private var header: some View {
+        HStack {
+            Text("빌드 관리").font(.headline)
+            Spacer()
+            if viewModel.isAdding {
+                HStack(spacing: 6) {
+                    ProgressView().scaleEffect(0.7)
+                    Text("추가 중...").font(.caption).foregroundStyle(.secondary)
                 }
+            }
+            Button("파일 추가") { showFilePicker = true }
                 .buttonStyle(.bordered)
-            }
-
-            let apps = viewModel.localApps()
-            if apps.isEmpty {
-                Text("로컬에 저장된 빌드가 없습니다.")
-                    .font(.caption).foregroundStyle(.secondary).padding(.vertical, 8)
-            } else {
-                ForEach(apps, id: \.path) { appURL in
-                    localBuildRow(appURL)
-                }
-            }
         }
     }
 
-    private func localBuildRow(_ appURL: URL) -> some View {
-        HStack {
-            Image(systemName: "app.fill").foregroundStyle(.blue)
-            VStack(alignment: .leading) {
-                Text(appURL.lastPathComponent).font(.body)
+    // MARK: - Guide
+
+    private var guideBanner: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "lightbulb.fill")
+                .foregroundStyle(.yellow)
+                .font(.title3)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Google Drive에서 .app 또는 .zip 파일을 다운로드한 후,")
+                    .font(.callout)
+                Text("'파일 추가' 버튼을 누르거나 이 영역으로 드래그하세요.")
+                    .font(.callout).foregroundStyle(.secondary)
+            }
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.yellow.opacity(0.06))
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+    }
+
+    // MARK: - Build List
+
+    private var buildList: some View {
+        let apps = viewModel.localApps()
+        return Group {
+            if apps.isEmpty {
+                ContentUnavailableView(
+                    "저장된 빌드가 없습니다",
+                    systemImage: "app.dashed",
+                    description: Text("파일을 추가하거나 여기로 드래그하세요.")
+                )
+                .padding(.vertical, 40)
+            } else {
+                VStack(spacing: 8) {
+                    ForEach(apps, id: \.path) { appURL in
+                        buildRow(appURL)
+                    }
+                }
+            }
+        }
+        .id(refreshId)
+    }
+
+    private func buildRow(_ appURL: URL) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: "app.fill")
+                .foregroundStyle(.blue)
+                .font(.title2)
+                .frame(width: 28)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(appURL.lastPathComponent)
+                    .font(.body).fontWeight(.medium)
                 Text(appURL.deletingLastPathComponent().lastPathComponent)
                     .font(.caption).foregroundStyle(.secondary)
             }
+
             Spacer()
+
             Button("설치") {
                 appToInstall = appURL
                 showInstallSheet = true
             }
             .buttonStyle(.bordered)
 
-            Button { viewModel.deleteBuild(at: appURL) } label: {
+            Button {
+                viewModel.deleteBuild(at: appURL)
+                refreshId = UUID()
+            } label: {
                 Image(systemName: "trash").foregroundStyle(.red)
             }
             .buttonStyle(.borderless)
         }
-        .padding(8)
+        .padding(10)
         .background(.background.secondary)
         .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 
-    // MARK: - Drive
+    // MARK: - Drop
 
-    private var driveSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text("Google Drive 빌드").font(.headline)
-                Spacer()
-                if viewModel.isLoadingRemote { ProgressView().scaleEffect(0.8) }
-                Button("새로고침") { Task { await viewModel.loadRemoteBuilds() } }
-                    .buttonStyle(.bordered)
-                    .disabled(viewModel.isLoadingRemote)
-            }
-
-            if !viewModel.isDriveConfigured {
-                ContentUnavailableView(
-                    "Google Drive 미연동",
-                    systemImage: "cloud",
-                    description: Text("설정에서 서비스 계정 키를 등록해주세요.")
-                )
-            } else if let error = viewModel.remoteError {
-                Label(error, systemImage: "exclamationmark.triangle").foregroundStyle(.red).font(.caption)
-            } else {
-                ForEach(viewModel.remoteBuilds) { build in
-                    remoteBuildRow(build)
+    private var dropOverlay: some View {
+        RoundedRectangle(cornerRadius: 12)
+            .strokeBorder(.blue, style: StrokeStyle(lineWidth: 3, dash: [8]))
+            .background(RoundedRectangle(cornerRadius: 12).fill(.blue.opacity(0.08)))
+            .overlay {
+                VStack(spacing: 8) {
+                    Image(systemName: "arrow.down.doc.fill")
+                        .font(.largeTitle).foregroundStyle(.blue)
+                    Text("여기에 파일을 놓으세요")
+                        .font(.headline).foregroundStyle(.blue)
+                    Text(".app 또는 .zip 파일")
+                        .font(.caption).foregroundStyle(.secondary)
                 }
             }
-        }
+            .padding(24)
     }
 
-    private func remoteBuildRow(_ build: BuildInfo) -> some View {
-        HStack {
-            Image(systemName: "doc.zipper").foregroundStyle(.orange)
-            VStack(alignment: .leading) {
-                Text(build.fileName).font(.body)
-                HStack(spacing: 8) {
-                    Text("v\(build.version)").font(.caption)
-                        .padding(.horizontal, 6).padding(.vertical, 2)
-                        .background(.blue.opacity(0.1)).clipShape(Capsule())
-                    Text(build.rcNumber).font(.caption).foregroundStyle(.secondary)
-                    Text(build.displaySize).font(.caption).foregroundStyle(.secondary)
+    private func handleDrop(_ providers: [NSItemProvider]) -> Bool {
+        for provider in providers {
+            provider.loadItem(forTypeIdentifier: "public.file-url", options: nil) { data, _ in
+                guard let data = data as? Data,
+                      let path = String(data: data, encoding: .utf8),
+                      let url = URL(string: path) else { return }
+                let ext = url.pathExtension.lowercased()
+                guard ext == "app" || ext == "zip" else { return }
+                Task { @MainActor in
+                    await viewModel.addBuild(from: url)
+                    refreshId = UUID()
                 }
             }
-            Spacer()
-            if viewModel.downloadingFileId == build.id {
-                ProgressView(value: viewModel.downloadProgress).frame(width: 80)
-            } else {
-                Button("다운로드") { Task { await viewModel.downloadBuild(build) } }
-                    .buttonStyle(.bordered)
-            }
         }
-        .padding(8)
-        .background(.background.secondary)
+        return true
+    }
+
+    // MARK: - Banners
+
+    private func successBanner(_ message: String) -> some View {
+        HStack {
+            Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
+            Text(message).font(.callout)
+            Spacer()
+            Button("닫기") { viewModel.dismissSuccess() }.buttonStyle(.borderless)
+        }
+        .padding(12)
+        .background(.green.opacity(0.1))
         .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 }

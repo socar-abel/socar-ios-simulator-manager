@@ -5,76 +5,46 @@ import SimulatorDomainInterface
 @Observable
 public final class BuildListViewModel {
 
-    public private(set) var remoteBuilds: [BuildInfo] = []
-    public private(set) var isLoadingRemote = false
-    public private(set) var remoteError: String?
-    public private(set) var downloadingFileId: String?
-    public private(set) var downloadProgress: Double = 0
-    public private(set) var errorMessage: String?
-    public private(set) var isDriveConfigured: Bool
+    public private(set) var isAdding = false
+    public var errorMessage: String?
+    public var successMessage: String?
 
     private let buildUseCase: any BuildUseCaseInterface
     private let simulatorUseCase: any SimulatorUseCaseInterface
-    private let folderId: String
 
     public init(
         buildUseCase: any BuildUseCaseInterface,
-        simulatorUseCase: any SimulatorUseCaseInterface,
-        folderId: String,
-        isDriveConfigured: Bool
+        simulatorUseCase: any SimulatorUseCaseInterface
     ) {
         self.buildUseCase = buildUseCase
         self.simulatorUseCase = simulatorUseCase
-        self.folderId = folderId
-        self.isDriveConfigured = isDriveConfigured
     }
 
     // MARK: - Input
-
-    public func onAppear() async {
-        if isDriveConfigured {
-            await loadRemoteBuilds()
-        }
-    }
-
-    public func loadRemoteBuilds() async {
-        guard isDriveConfigured else { return }
-        isLoadingRemote = true
-        remoteError = nil
-        defer { isLoadingRemote = false }
-
-        do {
-            remoteBuilds = try await buildUseCase.listRemoteBuilds(folderId: folderId)
-        } catch {
-            remoteError = error.localizedDescription
-        }
-    }
 
     public func localApps() -> [URL] {
         buildUseCase.listLocalApps()
     }
 
-    public func downloadBuild(_ build: BuildInfo) async {
-        downloadingFileId = build.id
-        downloadProgress = 0
-        defer { downloadingFileId = nil }
+    public func addBuild(from url: URL) async {
+        isAdding = true
+        errorMessage = nil
+        defer { isAdding = false }
 
         do {
-            let zipURL = try await buildUseCase.downloadBuild(
-                fileId: build.id,
-                fileName: build.fileName
-            ) { [weak self] progress in
-                Task { @MainActor in self?.downloadProgress = progress }
-            }
-            _ = try await buildUseCase.extractZIP(at: zipURL)
-            try? FileManager.default.removeItem(at: zipURL)
+            let appURL = try await buildUseCase.addBuild(from: url)
+            successMessage = "\(appURL.lastPathComponent) 추가 완료"
         } catch {
             errorMessage = error.localizedDescription
         }
     }
 
     public func deleteBuild(at path: URL) {
-        try? buildUseCase.deleteLocalBuild(at: path)
+        do {
+            try buildUseCase.deleteLocalBuild(at: path)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
     }
 
     public func installOnDevice(appURL: URL, udid: String) async throws {
@@ -84,4 +54,7 @@ public final class BuildListViewModel {
     public func bootedDevices() async -> [SimulatorDevice] {
         (try? await simulatorUseCase.fetchDevices().filter(\.isBooted)) ?? []
     }
+
+    public func dismissError() { errorMessage = nil }
+    public func dismissSuccess() { successMessage = nil }
 }
