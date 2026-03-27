@@ -264,7 +264,7 @@ struct InstallTargetSheet: View {
                                     Text(rt).foregroundStyle(.secondary)
                                 }
                                 Spacer()
-                                Image(systemName: "arrow.right.circle").foregroundStyle(.blue)
+                                Text("설치").foregroundStyle(.blue)
                             }
                         }
                         .buttonStyle(.plain)
