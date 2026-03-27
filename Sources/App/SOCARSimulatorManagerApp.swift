@@ -18,7 +18,7 @@ struct SOCARSimulatorManagerApp: App {
         WindowGroup {
             RootView(coordinator: coordinator)
         }
-        .windowResizability(.contentSize)
+        .defaultSize(width: 1100, height: 700)
 
         Settings {
             if let vm = coordinator.settingsViewModel {
