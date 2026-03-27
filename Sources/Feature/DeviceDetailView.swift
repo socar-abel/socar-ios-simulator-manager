@@ -11,6 +11,7 @@ struct DeviceDetailView: View {
     @State private var showDeleteConfirmation = false
     @State private var showFilePicker = false
     @State private var installProgressMessage = ""
+    @State private var deepLinkURL = ""
 
     var body: some View {
         ScrollView {
@@ -19,6 +20,8 @@ struct DeviceDetailView: View {
                 Divider()
                 controls
                 if device.isBooted {
+                    Divider()
+                    deepLinkSection
                     Divider()
                     appManagement
                 }
@@ -87,6 +90,31 @@ struct DeviceDetailView: View {
                     showDeleteConfirmation = true
                 }
             }
+        }
+    }
+
+    private var deepLinkSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("딥링크").font(.headline)
+            HStack(spacing: 8) {
+                TextField("socar://path 또는 https://...", text: $deepLinkURL)
+                    .textFieldStyle(.roundedBorder)
+                    .onSubmit { openDeepLink() }
+                Button("실행") { openDeepLink() }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(deepLinkURL.trimmingCharacters(in: .whitespaces).isEmpty || isPerformingAction)
+            }
+            Text("시뮬레이터에서 딥링크를 열어 특정 화면으로 이동합니다.")
+                .font(.caption).foregroundStyle(.secondary)
+        }
+    }
+
+    private func openDeepLink() {
+        let url = deepLinkURL.trimmingCharacters(in: .whitespaces)
+        guard !url.isEmpty else { return }
+        performAction {
+            try await viewModel.openURL(udid: device.udid, url: url)
+            try? await viewModel.bringSimulatorToFront()
         }
     }
 

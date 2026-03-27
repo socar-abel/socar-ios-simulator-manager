@@ -209,6 +209,10 @@ public final class DeviceListViewModel {
         try await useCase.launchApp(udid: udid, bundleId: bundleId)
     }
 
+    public func openURL(udid: String, url: String) async throws {
+        try await useCase.openURL(udid: udid, url: url)
+    }
+
     public func dismissError() {
         errorMessage = nil
     }
