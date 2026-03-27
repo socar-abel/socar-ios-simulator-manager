@@ -10,19 +10,19 @@ struct OnboardingView: View {
     let onRetry: () -> Void
 
     var body: some View {
-        VStack(spacing: 32) {
+        VStack(spacing: 48) {
             Image(systemName: "macbook.and.iphone")
-                .font(.system(size: 64)).foregroundStyle(.blue)
+                .font(.system(size: 96)).foregroundStyle(.blue)
 
-            VStack(spacing: 8) {
+            VStack(spacing: 12) {
                 Text("SOCAR Simulator Manager")
-                    .font(.largeTitle).fontWeight(.bold)
+                    .font(.system(size: 36, weight: .bold))
 
                 Text("환영합니다! 시작하기 전에 간단한 준비가 필요해요.")
-                    .font(.body).foregroundStyle(.secondary)
+                    .font(.title3).foregroundStyle(.secondary)
             }
 
-            VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 24) {
                 stepRow(
                     number: 1,
                     title: "Xcode 설치",
@@ -36,12 +36,12 @@ struct OnboardingView: View {
                     isDone: status.xcodeInstalled && status.commandLineToolsInstalled
                 )
             }
-            .padding(20)
+            .padding(28)
             .background(.background.secondary)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .clipShape(RoundedRectangle(cornerRadius: 16))
 
             if !status.xcodeInstalled {
-                VStack(spacing: 12) {
+                VStack(spacing: 16) {
                     Button {
                         NSWorkspace.shared.open(
                             URL(string: "macappstore://apps.apple.com/app/xcode/id497799835")!
@@ -49,12 +49,12 @@ struct OnboardingView: View {
                     } label: {
                         Label("App Store에서 Xcode 설치", systemImage: "arrow.down.app")
                             .font(.title2)
-                            .frame(maxWidth: 400, minHeight: 56)
+                            .frame(maxWidth: 480, minHeight: 64)
                     }
                     .buttonStyle(.borderedProminent).controlSize(.large)
 
                     Text("App Store 버전이 호환되지 않는다면?")
-                        .font(.caption).foregroundStyle(.secondary)
+                        .font(.body).foregroundStyle(.secondary)
 
                     Button {
                         NSWorkspace.shared.open(
@@ -63,40 +63,42 @@ struct OnboardingView: View {
                     } label: {
                         Label("내 macOS에 호환되는 버전 찾아서 설치", systemImage: "magnifyingglass")
                             .font(.title2)
-                            .frame(maxWidth: 400, minHeight: 56)
+                            .frame(maxWidth: 480, minHeight: 64)
                     }
                     .buttonStyle(.bordered).controlSize(.large)
                 }
             }
 
             Text("설치가 완료되면 아래 버튼을 눌러주세요.")
-                .font(.callout).foregroundStyle(.secondary)
+                .font(.title3).foregroundStyle(.secondary)
 
             Button {
                 onRetry()
             } label: {
                 Label("준비 완료! 시작하기", systemImage: "checkmark.circle")
+                    .font(.title3)
+                    .frame(maxWidth: 480, minHeight: 56)
             }
             .buttonStyle(.bordered).controlSize(.large)
         }
-        .padding(48)
+        .padding(64)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private func stepRow(number: Int, title: String, description: String, isDone: Bool) -> some View {
-        HStack(alignment: .top, spacing: 12) {
+        HStack(alignment: .top, spacing: 16) {
             if isDone {
                 Image(systemName: "checkmark.circle.fill")
-                    .foregroundStyle(.green).font(.title3)
+                    .foregroundStyle(.green).font(.title2)
             } else {
                 ZStack {
-                    Circle().fill(.blue.opacity(0.15)).frame(width: 28, height: 28)
-                    Text("\(number)").font(.callout).fontWeight(.semibold).foregroundStyle(.blue)
+                    Circle().fill(.blue.opacity(0.15)).frame(width: 36, height: 36)
+                    Text("\(number)").font(.title3).fontWeight(.semibold).foregroundStyle(.blue)
                 }
             }
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 6) {
                 Text(title)
-                    .font(.headline)
+                    .font(.title3).fontWeight(.semibold)
                     .foregroundStyle(isDone ? .secondary : .primary)
                     .strikethrough(isDone)
                 Text(description)
