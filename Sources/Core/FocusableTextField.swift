@@ -59,11 +59,11 @@ public struct FocusableTextField: NSViewRepresentable {
 /// 클릭 시 자동으로 first responder를 가져오는 NSTextField
 public class ClickableTextField: NSTextField {
     public override func mouseDown(with event: NSEvent) {
+        // 앱 자체를 활성화 + 윈도우를 key window로
+        NSApplication.shared.activate(ignoringOtherApps: true)
+        self.window?.makeKeyAndOrderFront(nil)
         super.mouseDown(with: event)
-        // 클릭 시 강제로 first responder 획득
-        if let window = self.window, window.firstResponder != self.currentEditor() {
-            window.makeFirstResponder(self)
-        }
+        self.window?.makeFirstResponder(self)
     }
 
     public override func becomeFirstResponder() -> Bool {
