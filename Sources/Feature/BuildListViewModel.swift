@@ -52,17 +52,8 @@ public final class BuildListViewModel {
         try? await simulatorUseCase.bringSimulatorToFront()
     }
 
-    public func isAppInstalled(appURL: URL, udid: String) async -> Bool {
-        guard let bundleId = bundleIdentifier(from: appURL) else { return false }
-        return (try? await simulatorUseCase.isAppInstalled(udid: udid, bundleId: bundleId)) ?? false
-    }
-
     public func appInfo(from appURL: URL) -> AppBundleInfo {
         AppBundleInfo(appURL: appURL)
-    }
-
-    private func bundleIdentifier(from appURL: URL) -> String? {
-        appInfo(from: appURL).bundleId
     }
 
     public func bootedDevices() async -> [SimulatorDevice] {

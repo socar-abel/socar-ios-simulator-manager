@@ -229,7 +229,6 @@ struct InstallTargetSheet: View {
     let onDismiss: () -> Void
 
     @State private var bootedDevices: [SimulatorDevice] = []
-    @State private var installedStatus: [String: Bool] = [:]
     @State private var isLoadingDevices = true
     @State private var isInstalling = false
     @State private var installError: String?
@@ -273,7 +272,6 @@ struct InstallTargetSheet: View {
             } else {
                 List {
                     ForEach(bootedDevices) { device in
-                        let isInstalled = installedStatus[device.udid] ?? false
                         Button {
                             install(on: device)
                         } label: {
@@ -284,9 +282,6 @@ struct InstallTargetSheet: View {
                                     Text(rt).foregroundStyle(.secondary)
                                 }
                                 Spacer()
-                                if isInstalled {
-                                    Text("이미 설치됨").font(.caption).foregroundStyle(.green)
-                                }
                                 Text("설치").foregroundStyle(.blue)
                             }
                         }
@@ -302,12 +297,6 @@ struct InstallTargetSheet: View {
         .frame(width: 450, height: 350)
         .task {
             bootedDevices = await viewModel.bootedDevices()
-            // 각 디바이스별 설치 여부 확인
-            for device in bootedDevices {
-                installedStatus[device.udid] = await viewModel.isAppInstalled(
-                    appURL: appURL, udid: device.udid
-                )
-            }
             isLoadingDevices = false
         }
     }
