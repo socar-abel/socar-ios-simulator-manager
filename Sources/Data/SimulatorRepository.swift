@@ -262,7 +262,7 @@ public final class SimulatorRepository<Dependency: SimulatorRepositoryDependency
 
         let index = try JSONDecoder().decode(DVTDownloadableIndex.self, from: jsonData)
         return index.downloadables
-            .filter { $0.name.contains("iOS") }
+            .filter { $0.name.contains("iOS") && $0.isDownloadableOnCurrentMac }
             .map { item in
                 DownloadableIOSVersion(
                     name: item.name,

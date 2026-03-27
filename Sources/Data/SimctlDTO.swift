@@ -72,9 +72,44 @@ struct DVTDownloadableItem: Codable {
     let source: String?
     let contentType: String?
     let simulatorVersion: DVTSimulatorVersion?
+    let hostRequirements: DVTHostRequirements?
+
+    /// 현재 macOS에서 다운로드 가능한지 판별
+    var isDownloadableOnCurrentMac: Bool {
+        // contentType이 package(구식 포맷)이면 불가
+        if contentType == "package" { return false }
+
+        // maxHostVersion이 현재 macOS보다 낮으면 불가
+        if let maxHost = hostRequirements?.maxHostVersion {
+            let currentMacOS = ProcessInfo.processInfo.operatingSystemVersion
+            let currentStr = "\(currentMacOS.majorVersion).\(currentMacOS.minorVersion).\(currentMacOS.patchVersion)"
+            if compareVersions(maxHost, currentStr) == .orderedAscending {
+                return false
+            }
+        }
+
+        return true
+    }
+
+    private func compareVersions(_ v1: String, _ v2: String) -> ComparisonResult {
+        let parts1 = v1.split(separator: ".").compactMap { Int($0) }
+        let parts2 = v2.split(separator: ".").compactMap { Int($0) }
+        let count = max(parts1.count, parts2.count)
+        for i in 0..<count {
+            let a = i < parts1.count ? parts1[i] : 0
+            let b = i < parts2.count ? parts2[i] : 0
+            if a < b { return .orderedAscending }
+            if a > b { return .orderedDescending }
+        }
+        return .orderedSame
+    }
 }
 
 struct DVTSimulatorVersion: Codable {
     let buildUpdate: String?
     let version: String?
+}
+
+struct DVTHostRequirements: Codable {
+    let maxHostVersion: String?
 }
