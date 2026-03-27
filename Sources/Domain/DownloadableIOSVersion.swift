@@ -6,6 +6,7 @@ public struct DownloadableIOSVersion: Identifiable, Hashable, Sendable {
     public let fileSize: Int64
     public let source: String
     public let contentType: String
+    public let buildVersion: String?
 
     public var id: String { "\(name)-\(version)-\(contentType)" }
 
@@ -25,11 +26,12 @@ public struct DownloadableIOSVersion: Identifiable, Hashable, Sendable {
         name.lowercased().contains("beta")
     }
 
-    public init(name: String, version: String, fileSize: Int64, source: String, contentType: String) {
+    public init(name: String, version: String, fileSize: Int64, source: String, contentType: String, buildVersion: String? = nil) {
         self.name = name
         self.version = version
         self.fileSize = fileSize
         self.source = source
         self.contentType = contentType
+        self.buildVersion = buildVersion
     }
 }

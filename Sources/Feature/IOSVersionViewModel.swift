@@ -90,7 +90,7 @@ public final class IOSVersionViewModel {
         }
 
         do {
-            try await useCase.downloadIOSVersion(platform: "iOS")
+            try await useCase.downloadIOSVersion(platform: "iOS", buildVersion: version.buildVersion)
             successMessage = "\(version.shortName) 다운로드가 완료되었습니다."
             await refreshAll()
             await loadDownloadableVersions()

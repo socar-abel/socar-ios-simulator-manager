@@ -100,8 +100,8 @@ public final class SimulatorUseCase<Dependency: SimulatorUseCaseDependency>: Sim
         try await dependency.repository.deleteIOSVersion(identifier: identifier)
     }
 
-    public func downloadIOSVersion(platform: String) async throws {
-        try await dependency.repository.downloadIOSVersion(platform: platform)
+    public func downloadIOSVersion(platform: String, buildVersion: String?) async throws {
+        try await dependency.repository.downloadIOSVersion(platform: platform, buildVersion: buildVersion)
     }
 
     // MARK: - Disk

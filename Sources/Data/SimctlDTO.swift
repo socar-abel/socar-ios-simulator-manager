@@ -71,4 +71,10 @@ struct DVTDownloadableItem: Codable {
     let fileSize: Int64
     let source: String?
     let contentType: String?
+    let simulatorVersion: DVTSimulatorVersion?
+}
+
+struct DVTSimulatorVersion: Codable {
+    let buildUpdate: String?
+    let version: String?
 }

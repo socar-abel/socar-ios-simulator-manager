@@ -269,7 +269,8 @@ public final class SimulatorRepository<Dependency: SimulatorRepositoryDependency
                     version: item.version,
                     fileSize: item.fileSize,
                     source: item.source ?? "",
-                    contentType: item.contentType ?? ""
+                    contentType: item.contentType ?? "",
+                    buildVersion: item.simulatorVersion?.buildUpdate
                 )
             }
     }
@@ -281,11 +282,14 @@ public final class SimulatorRepository<Dependency: SimulatorRepositoryDependency
         }
     }
 
-    public func downloadIOSVersion(platform: String) async throws {
-        // xcodebuild -downloadPlatform iOS (장시간 소요)
+    public func downloadIOSVersion(platform: String, buildVersion: String?) async throws {
+        var args = ["-downloadPlatform", platform]
+        if let buildVersion, !buildVersion.isEmpty {
+            args += ["-buildVersion", buildVersion]
+        }
         let result = try await dependency.shell.run(
             executable: "/usr/bin/xcodebuild",
-            arguments: ["-downloadPlatform", platform],
+            arguments: args,
             timeout: 3600  // iOS 버전 다운로드는 최대 1시간
         )
         guard result.isSuccess else {
