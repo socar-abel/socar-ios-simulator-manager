@@ -83,6 +83,7 @@ public final class DeviceListViewModel {
         errorMessage = nil
         do {
             try await useCase.bootDevice(udid: udid)
+            try? await useCase.bringSimulatorToFront()
             await refreshAll()
         } catch {
             errorMessage = error.localizedDescription
