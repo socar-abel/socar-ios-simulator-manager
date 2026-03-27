@@ -46,16 +46,16 @@ public final class DeviceListViewModel {
                 return (a.runtimeIdentifier ?? "") > (b.runtimeIdentifier ?? "")
             case .runtimeOldest:
                 return (a.runtimeIdentifier ?? "") < (b.runtimeIdentifier ?? "")
-            case .screenWidthAsc:
-                let wa = profile(for: a)?.logicalWidth
-                let wb = profile(for: b)?.logicalWidth
-                if wa == nil && wb == nil { return a.name.localizedStandardCompare(b.name) == .orderedAscending }
-                return (wa ?? .greatestFiniteMagnitude) < (wb ?? .greatestFiniteMagnitude)
-            case .screenWidthDesc:
-                let wa = profile(for: a)?.logicalWidth
-                let wb = profile(for: b)?.logicalWidth
-                if wa == nil && wb == nil { return a.name.localizedStandardCompare(b.name) == .orderedDescending }
-                return (wa ?? 0) > (wb ?? 0)
+            case .screenWidthRatioAsc:
+                let ra = profile(for: a)?.widthRatio
+                let rb = profile(for: b)?.widthRatio
+                if ra == nil && rb == nil { return a.name.localizedStandardCompare(b.name) == .orderedAscending }
+                return (ra ?? .greatestFiniteMagnitude) < (rb ?? .greatestFiniteMagnitude)
+            case .screenWidthRatioDesc:
+                let ra = profile(for: a)?.widthRatio
+                let rb = profile(for: b)?.widthRatio
+                if ra == nil && rb == nil { return a.name.localizedStandardCompare(b.name) == .orderedDescending }
+                return (ra ?? 0) > (rb ?? 0)
             }
         }
         return result
@@ -273,8 +273,8 @@ public enum DeviceSortOption: String, CaseIterable {
     case nameDesc = "이름 역순"
     case runtimeNewest = "iOS 최신순"
     case runtimeOldest = "iOS 오래된순"
-    case screenWidthAsc = "화면 좁은순"
-    case screenWidthDesc = "화면 넓은순"
+    case screenWidthRatioAsc = "width 비율 좁은순"
+    case screenWidthRatioDesc = "width 비율 넓은순"
 }
 
 public enum NotchFilter: String, CaseIterable {

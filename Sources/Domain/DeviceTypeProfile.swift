@@ -20,6 +20,12 @@ public struct DeviceTypeProfile: Sendable {
         return Double(screenHeight) / Double(screenScale)
     }
 
+    /// 가로/세로 비율 (width / height). 값이 작을수록 세로로 길쭉한 화면.
+    public var widthRatio: Double {
+        guard logicalHeight > 0 else { return 0 }
+        return logicalWidth / logicalHeight
+    }
+
     /// 화면 크기 표시 문자열
     public var screenSizeDescription: String {
         "\(Int(logicalWidth))×\(Int(logicalHeight)) pt"
