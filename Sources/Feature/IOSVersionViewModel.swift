@@ -33,7 +33,11 @@ public final class IOSVersionViewModel {
     public func refreshAll() async {
         isLoading = true
         defer { isLoading = false }
+        await silentRefresh()
+    }
 
+    /// 로딩 표시 없이 데이터만 갱신 (폴링용)
+    private func silentRefresh() async {
         do {
             async let versions = useCase.fetchInstalledIOSVersions()
             async let disk = useCase.fetchDiskUsage()
@@ -73,7 +77,7 @@ public final class IOSVersionViewModel {
             // 실제 삭제 완료까지 폴링 (최대 30초)
             for _ in 0..<15 {
                 try? await Task.sleep(for: .seconds(2))
-                await refreshAll()
+                await silentRefresh()
                 if !installedIOSVersions.contains(where: { $0.identifier == version.identifier }) {
                     break
                 }
@@ -99,7 +103,7 @@ public final class IOSVersionViewModel {
             try await useCase.downloadIOSVersion(platform: "iOS", buildVersion: version.buildVersion)
             // 설치 등록 완료까지 폴링 (최대 30초)
             for _ in 0..<15 {
-                await refreshAll()
+                await silentRefresh()
                 if installedIOSVersions.count > beforeCount {
                     break
                 }
