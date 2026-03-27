@@ -17,6 +17,9 @@ struct SOCARSimulatorManagerApp: App {
     var body: some Scene {
         WindowGroup {
             RootView(coordinator: coordinator)
+                .onAppear {
+                    NSApplication.shared.activate(ignoringOtherApps: true)
+                }
         }
         .defaultSize(width: 1100, height: 700)
 
