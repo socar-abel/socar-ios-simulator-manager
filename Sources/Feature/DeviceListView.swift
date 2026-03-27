@@ -121,40 +121,59 @@ public struct DeviceListView: View {
         VStack(spacing: 0) {
             sortFilterBar
             Divider()
-            List {
-                let sorted = viewModel.filteredAndSortedDevices
-                let booted = sorted.filter(\.isBooted)
-                if !booted.isEmpty {
-                    Section("실행중") {
-                        ForEach(booted) { device in
-                            deviceRow(device)
+            ScrollView {
+                LazyVStack(spacing: 0, pinnedViews: .sectionHeaders) {
+                    let sorted = viewModel.filteredAndSortedDevices
+                    let booted = sorted.filter(\.isBooted)
+                    if !booted.isEmpty {
+                        Section {
+                            ForEach(booted) { device in
+                                deviceRow(device)
+                                Divider().padding(.leading, 40)
+                            }
+                        } header: {
+                            sectionHeader("실행중")
                         }
                     }
-                }
-                let shutdown = sorted.filter(\.isShutdown)
-                if !shutdown.isEmpty {
-                    Section("종료됨") {
-                        ForEach(shutdown) { device in
-                            deviceRow(device)
+                    let shutdown = sorted.filter(\.isShutdown)
+                    if !shutdown.isEmpty {
+                        Section {
+                            ForEach(shutdown) { device in
+                                deviceRow(device)
+                                Divider().padding(.leading, 40)
+                            }
+                        } header: {
+                            sectionHeader("종료됨")
                         }
                     }
-                }
-                let other = sorted.filter { !$0.isBooted && !$0.isShutdown }
-                if !other.isEmpty {
-                    Section("기타") {
-                        ForEach(other) { device in
-                            deviceRow(device)
+                    let other = sorted.filter { !$0.isBooted && !$0.isShutdown }
+                    if !other.isEmpty {
+                        Section {
+                            ForEach(other) { device in
+                                deviceRow(device)
+                                Divider().padding(.leading, 40)
+                            }
+                        } header: {
+                            sectionHeader("기타")
                         }
                     }
                 }
             }
-            .listStyle(.inset)
-            .focusable(false)
 
             if viewModel.isMultiSelectMode && viewModel.selectedCount > 0 {
                 deleteBar
             }
         }
+    }
+
+    private func sectionHeader(_ title: String) -> some View {
+        Text(title)
+            .font(.caption).fontWeight(.semibold)
+            .foregroundStyle(.secondary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 6)
+            .background(.bar)
     }
 
     private func deviceRow(_ device: SimulatorDevice) -> some View {

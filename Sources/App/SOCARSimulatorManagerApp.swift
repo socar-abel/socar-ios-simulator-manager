@@ -10,6 +10,7 @@ struct SOCARSimulatorManagerApp: App {
     @State private var coordinator: AppCoordinator
 
     init() {
+        NSApplication.shared.setActivationPolicy(.regular)
         let assembly = AppAssembly()
         _coordinator = State(initialValue: AppCoordinator(assembly: assembly))
     }
