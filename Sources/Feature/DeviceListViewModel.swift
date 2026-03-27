@@ -172,6 +172,17 @@ public final class DeviceListViewModel {
         try await useCase.bringSimulatorToFront()
     }
 
+    public func renameDevice(udid: String, newName: String) async {
+        errorMessage = nil
+        do {
+            try await useCase.renameDevice(udid: udid, newName: newName)
+            await refreshAll()
+            successMessage = "디바이스 이름이 변경되었습니다."
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
     public func delete(udid: String) async {
         let deviceName = devices.first { $0.udid == udid }?.name ?? "디바이스"
         isDeleting = true

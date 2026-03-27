@@ -105,6 +105,13 @@ public final class SimulatorRepository<Dependency: SimulatorRepositoryDependency
         }
     }
 
+    public func renameDevice(udid: String, newName: String) async throws {
+        let result = try await dependency.shell.simctlArgs(["rename", udid, newName])
+        guard result.isSuccess else {
+            throw SimulatorRepositoryError.commandFailed(result.stderr)
+        }
+    }
+
     public func installApp(udid: String, appPath: String) async throws {
         let result = try await dependency.shell.simctlArgs(["install", udid, appPath])
         guard result.isSuccess else {

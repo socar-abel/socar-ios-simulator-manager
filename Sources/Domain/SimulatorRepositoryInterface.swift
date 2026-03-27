@@ -10,6 +10,7 @@ public protocol SimulatorRepositoryInterface: Sendable {
     func bootDevice(udid: String) async throws
     func shutdownDevice(udid: String) async throws
     func deleteDevice(udid: String) async throws
+    func renameDevice(udid: String, newName: String) async throws
 
     func installApp(udid: String, appPath: String) async throws
     func launchApp(udid: String, bundleId: String) async throws

@@ -54,6 +54,10 @@ public final class SimulatorUseCase<Dependency: SimulatorUseCaseDependency>: Sim
         try await dependency.repository.deleteDevice(udid: udid)
     }
 
+    public func renameDevice(udid: String, newName: String) async throws {
+        try await dependency.repository.renameDevice(udid: udid, newName: newName)
+    }
+
     public func installApp(udid: String, appPath: URL) async throws {
         try await dependency.repository.installApp(
             udid: udid,

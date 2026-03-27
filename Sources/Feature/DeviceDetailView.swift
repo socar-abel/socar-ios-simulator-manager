@@ -11,6 +11,8 @@ struct DeviceDetailView: View {
     @State private var showFilePicker = false
     @State private var installProgressMessage = ""
     @State private var deepLinkURL = ""
+    @State private var isEditingName = false
+    @State private var editingName = ""
 
     private var device: SimulatorDevice? { viewModel.selectedDevice }
 
@@ -61,7 +63,42 @@ struct DeviceDetailView: View {
                 .font(.system(size: 40))
                 .foregroundStyle(.blue)
             VStack(alignment: .leading, spacing: 4) {
-                Text(device.name).font(.title2).fontWeight(.bold)
+                if isEditingName {
+                    HStack(spacing: 8) {
+                        TextField("디바이스 이름", text: $editingName)
+                            .textFieldStyle(.roundedBorder)
+                            .font(.title2)
+                            .fontWeight(.bold)
+                            .onSubmit { commitRename(device) }
+                        Button {
+                            commitRename(device)
+                        } label: {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundStyle(.green)
+                        }
+                        .buttonStyle(.plain)
+                        Button {
+                            isEditingName = false
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundStyle(.secondary)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                } else {
+                    HStack(spacing: 8) {
+                        Text(device.name).font(.title2).fontWeight(.bold)
+                        Button {
+                            editingName = device.name
+                            isEditingName = true
+                        } label: {
+                            Image(systemName: "pencil")
+                                .foregroundStyle(.secondary)
+                        }
+                        .buttonStyle(.plain)
+                        .help("이름 변경")
+                    }
+                }
                 HStack(spacing: 8) {
                     StatusBadge(isActive: device.isBooted)
                     Text(device.stateDisplayName).font(.subheadline).foregroundStyle(.secondary)
@@ -70,6 +107,18 @@ struct DeviceDetailView: View {
                     Text(runtime).font(.subheadline).foregroundStyle(.secondary)
                 }
             }
+        }
+    }
+
+    private func commitRename(_ device: SimulatorDevice) {
+        let trimmed = editingName.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty, trimmed != device.name else {
+            isEditingName = false
+            return
+        }
+        isEditingName = false
+        performAction {
+            await viewModel.renameDevice(udid: device.udid, newName: trimmed)
         }
     }
 
