@@ -64,6 +64,100 @@ public actor ShellService {
         try await run(executable: xcrunPath, arguments: ["simctl"] + arguments)
     }
 
+    /// 실시간 stdout 라인 콜백 지원 (다운로드 진행률 등)
+    public func runWithProgress(
+        executable: String,
+        arguments: [String] = [],
+        timeout: TimeInterval = 3600,
+        onOutputLine: @Sendable @escaping (String) -> Void
+    ) async throws -> CommandResult {
+        logger.debug("실행(progress): \(executable) \(arguments.joined(separator: " "))")
+
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: executable)
+        process.arguments = arguments
+
+        let stdoutPipe = Pipe()
+        let stderrPipe = Pipe()
+        process.standardOutput = stdoutPipe
+        process.standardError = stderrPipe
+
+        var env = ProcessInfo.processInfo.environment
+        let extraPaths = ["/usr/bin", "/usr/local/bin", "/opt/homebrew/bin"]
+        let currentPath = env["PATH"] ?? ""
+        env["PATH"] = (extraPaths + [currentPath]).joined(separator: ":")
+        process.environment = env
+
+        return try await withThrowingTaskGroup(of: CommandResult?.self) { group in
+            group.addTask {
+                try await withCheckedThrowingContinuation { continuation in
+                    do {
+                        try process.run()
+                    } catch {
+                        continuation.resume(throwing: ShellError.launchFailed(error))
+                        return
+                    }
+
+                    DispatchQueue.global(qos: .userInitiated).async {
+                        // stdout을 줄 단위로 읽으면서 콜백 호출
+                        let handle = stdoutPipe.fileHandleForReading
+                        var stdoutAccum = ""
+                        var buffer = Data()
+
+                        while true {
+                            let chunk = handle.availableData
+                            if chunk.isEmpty { break }
+                            buffer.append(chunk)
+
+                            if let text = String(data: buffer, encoding: .utf8) {
+                                let lines = text.components(separatedBy: "\r")
+                                for line in lines.dropLast() {
+                                    let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
+                                    if !trimmed.isEmpty {
+                                        onOutputLine(trimmed)
+                                    }
+                                }
+                                // 마지막 불완전한 줄은 버퍼에 유지
+                                if let lastPart = lines.last {
+                                    buffer = lastPart.data(using: .utf8) ?? Data()
+                                } else {
+                                    buffer = Data()
+                                }
+                                stdoutAccum += text
+                            }
+                        }
+
+                        let stderrData = stderrPipe.fileHandleForReading.readDataToEndOfFile()
+                        let stderr = String(data: stderrData, encoding: .utf8) ?? ""
+                        process.waitUntilExit()
+
+                        continuation.resume(returning: CommandResult(
+                            exitCode: process.terminationStatus,
+                            stdout: stdoutAccum,
+                            stderr: stderr
+                        ))
+                    }
+                }
+            }
+
+            group.addTask {
+                try await Task.sleep(for: .seconds(timeout))
+                if process.isRunning {
+                    process.terminate()
+                }
+                throw ShellError.timeout(executable: executable, seconds: timeout)
+            }
+
+            guard let result = try await group.next() else {
+                throw ShellError.timeout(executable: executable, seconds: timeout)
+            }
+            group.cancelAll()
+
+            if let result { return result }
+            throw ShellError.timeout(executable: executable, seconds: timeout)
+        }
+    }
+
     // MARK: - Static
 
     public static func execute(

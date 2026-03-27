@@ -104,6 +104,18 @@ public final class SimulatorUseCase<Dependency: SimulatorUseCaseDependency>: Sim
         try await dependency.repository.downloadIOSVersion(platform: platform, buildVersion: buildVersion)
     }
 
+    public func downloadIOSVersionWithProgress(
+        platform: String,
+        buildVersion: String?,
+        onProgress: @Sendable @escaping (DownloadProgress) -> Void
+    ) async throws {
+        try await dependency.repository.downloadIOSVersionWithProgress(
+            platform: platform,
+            buildVersion: buildVersion,
+            onProgress: onProgress
+        )
+    }
+
     // MARK: - Disk
 
     public func fetchDiskUsage() async throws -> DiskUsage {

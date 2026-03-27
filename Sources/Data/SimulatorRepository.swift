@@ -290,8 +290,31 @@ public final class SimulatorRepository<Dependency: SimulatorRepositoryDependency
         let result = try await dependency.shell.run(
             executable: "/usr/bin/xcodebuild",
             arguments: args,
-            timeout: 3600  // iOS 버전 다운로드는 최대 1시간
+            timeout: 3600
         )
+        guard result.isSuccess else {
+            throw SimulatorRepositoryError.commandFailed(result.stderr)
+        }
+    }
+
+    public func downloadIOSVersionWithProgress(
+        platform: String,
+        buildVersion: String?,
+        onProgress: @Sendable @escaping (DownloadProgress) -> Void
+    ) async throws {
+        var args = ["-downloadPlatform", platform]
+        if let buildVersion, !buildVersion.isEmpty {
+            args += ["-buildVersion", buildVersion]
+        }
+        let result = try await dependency.shell.runWithProgress(
+            executable: "/usr/bin/xcodebuild",
+            arguments: args,
+            timeout: 3600
+        ) { line in
+            if let progress = DownloadProgress.parse(line: line) {
+                onProgress(progress)
+            }
+        }
         guard result.isSuccess else {
             throw SimulatorRepositoryError.commandFailed(result.stderr)
         }

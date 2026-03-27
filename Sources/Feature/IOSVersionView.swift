@@ -227,10 +227,24 @@ public struct IOSVersionView: View {
             }
 
             if viewModel.isDownloading, let name = viewModel.downloadingVersionName {
-                HStack(spacing: 8) {
-                    ProgressView().scaleEffect(0.8)
-                    Text("\(name) 다운로드 중... (수십 분 소요될 수 있습니다)")
-                        .font(.callout).foregroundStyle(.secondary)
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack(spacing: 8) {
+                        ProgressView().scaleEffect(0.8)
+                        Text("\(name) 다운로드 중")
+                            .font(.callout).fontWeight(.medium)
+                    }
+
+                    if let progress = viewModel.downloadProgress {
+                        // 진행률 바
+                        ProgressView(value: progress.percent, total: 100)
+                            .progressViewStyle(.linear)
+
+                        Text(progress.displayText)
+                            .font(.caption).foregroundStyle(.secondary)
+                    } else {
+                        Text("준비 중...")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
                 }
                 .padding(12)
                 .frame(maxWidth: .infinity, alignment: .leading)

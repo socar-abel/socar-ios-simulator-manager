@@ -23,6 +23,11 @@ public protocol SimulatorUseCaseInterface: Sendable {
     func fetchDownloadableIOSVersions() async throws -> [DownloadableIOSVersion]
     func deleteIOSVersion(identifier: String) async throws
     func downloadIOSVersion(platform: String, buildVersion: String?) async throws
+    func downloadIOSVersionWithProgress(
+        platform: String,
+        buildVersion: String?,
+        onProgress: @Sendable @escaping (DownloadProgress) -> Void
+    ) async throws
 
     // 디스크
     func fetchDiskUsage() async throws -> DiskUsage

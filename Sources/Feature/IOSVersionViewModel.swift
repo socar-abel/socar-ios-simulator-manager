@@ -11,6 +11,7 @@ public final class IOSVersionViewModel {
     public private(set) var isLoadingDownloadable = false
     public private(set) var isDownloading = false
     public private(set) var downloadingVersionName: String?
+    public private(set) var downloadProgress: DownloadProgress?
     public private(set) var isDeleting = false
     public private(set) var deletingVersionId: String?
     public private(set) var isCleaning = false
@@ -92,15 +93,25 @@ public final class IOSVersionViewModel {
     public func downloadIOSVersion(_ version: DownloadableIOSVersion) async {
         isDownloading = true
         downloadingVersionName = version.shortName
+        downloadProgress = DownloadProgress(status: .preparing)
         errorMessage = nil
         defer {
             isDownloading = false
             downloadingVersionName = nil
+            downloadProgress = nil
         }
 
         do {
             let beforeCount = installedIOSVersions.count
-            try await useCase.downloadIOSVersion(platform: "iOS", buildVersion: version.buildVersion)
+            try await useCase.downloadIOSVersionWithProgress(
+                platform: "iOS",
+                buildVersion: version.buildVersion
+            ) { [weak self] progress in
+                Task { @MainActor in
+                    self?.downloadProgress = progress
+                }
+            }
+            downloadProgress = DownloadProgress(status: .installing)
             // 설치 등록 완료까지 폴링 (최대 30초)
             for _ in 0..<15 {
                 await silentRefresh()

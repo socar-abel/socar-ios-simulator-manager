@@ -24,6 +24,11 @@ public protocol SimulatorRepositoryInterface: Sendable {
     func listDownloadableIOSVersions() async throws -> [DownloadableIOSVersion]
     func deleteIOSVersion(identifier: String) async throws
     func downloadIOSVersion(platform: String, buildVersion: String?) async throws
+    func downloadIOSVersionWithProgress(
+        platform: String,
+        buildVersion: String?,
+        onProgress: @Sendable @escaping (DownloadProgress) -> Void
+    ) async throws
 
     // 디스크
     func devicesDiskUsageBytes() async throws -> Int64
