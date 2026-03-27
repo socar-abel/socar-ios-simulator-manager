@@ -278,13 +278,19 @@ public struct IOSVersionView: View {
 
             Spacer()
 
-            Button {
-                Task { await viewModel.downloadIOSVersion(version) }
-            } label: {
-                Label("다운로드", systemImage: "arrow.down.to.line")
+            if viewModel.isDownloading && viewModel.downloadingVersionName == version.shortName {
+                ProgressView()
+                    .scaleEffect(0.8)
+                    .frame(width: 80)
+            } else {
+                Button {
+                    Task { await viewModel.downloadIOSVersion(version) }
+                } label: {
+                    Label("다운로드", systemImage: "arrow.down.to.line")
+                }
+                .buttonStyle(.bordered)
+                .disabled(viewModel.isDownloading)
             }
-            .buttonStyle(.bordered)
-            .disabled(viewModel.isDownloading)
         }
         .padding(10)
         .background(.background.secondary)
