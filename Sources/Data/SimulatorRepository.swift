@@ -133,6 +133,16 @@ public final class SimulatorRepository<Dependency: SimulatorRepositoryDependency
     }
 
     public func loadDeviceTypeProfiles() async throws -> [String: DeviceTypeProfile] {
+        // simctl에서 실제 identifier ↔ 이름 매핑 조회
+        let typesResult = try await dependency.shell.simctlArgs(["list", "devicetypes", "--json"])
+        var nameToIdentifier: [String: String] = [:]
+        if typesResult.isSuccess, let jsonData = typesResult.stdout.data(using: .utf8),
+           let parsed = try? JSONDecoder().decode(SimctlDeviceTypesResponse.self, from: jsonData) {
+            for dt in parsed.devicetypes {
+                nameToIdentifier[dt.name] = dt.identifier as String
+            }
+        }
+
         let basePath = "/Library/Developer/CoreSimulator/Profiles/DeviceTypes"
         guard let contents = try? FileManager.default.contentsOfDirectory(atPath: basePath) else { return [:] }
 
@@ -144,11 +154,8 @@ public final class SimulatorRepository<Dependency: SimulatorRepositoryDependency
                   let plist = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any]
             else { continue }
 
-            guard let identifier = (plist["modelIdentifier"] as? String).flatMap({ _ in
-                // identifier는 디바이스 타입 전체 경로에서 추출
-                let name = dir.replacingOccurrences(of: ".simdevicetype", with: "")
-                return "com.apple.CoreSimulator.SimDeviceType.\(name.replacingOccurrences(of: " ", with: "-"))"
-            }) else { continue }
+            let deviceName = dir.replacingOccurrences(of: ".simdevicetype", with: "")
+            guard let identifier = nameToIdentifier[deviceName] else { continue }
 
             let screenWidth = plist["mainScreenWidth"] as? Int ?? 0
             let screenHeight = plist["mainScreenHeight"] as? Int ?? 0

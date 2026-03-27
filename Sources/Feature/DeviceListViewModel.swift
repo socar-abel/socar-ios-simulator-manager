@@ -16,7 +16,7 @@ public final class DeviceListViewModel {
 
     // MARK: - Sort & Filter
 
-    public var sortOption: DeviceSortOption = .nameAsc
+    public var sortOption: DeviceSortOption = .nameDesc
     public var notchFilter: NotchFilter = .all
 
     public var filteredAndSortedDevices: [SimulatorDevice] {

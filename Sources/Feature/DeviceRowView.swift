@@ -8,25 +8,25 @@ struct DeviceRowView: View {
     var profile: DeviceTypeProfile?
 
     var body: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 14) {
             Image(systemName: device.name.lowercased().contains("ipad") ? "ipad" : "iphone")
-                .font(.title2)
+                .font(.system(size: 28))
                 .foregroundStyle(.secondary)
-                .frame(width: 28)
+                .frame(width: 36)
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text(device.name)
-                    .font(.body)
+                    .font(.title3)
                     .fontWeight(.medium)
-                HStack(spacing: 6) {
+                HStack(spacing: 8) {
                     if let runtime = device.runtimeDisplayName {
                         Text(runtime)
-                            .font(.caption)
+                            .font(.callout)
                             .foregroundStyle(.secondary)
                     }
                     if let p = profile {
                         Text(p.screenSizeDescription)
-                            .font(.caption2)
+                            .font(.caption)
                             .foregroundStyle(.tertiary)
                     }
                 }
@@ -35,6 +35,6 @@ struct DeviceRowView: View {
             Spacer()
             StatusBadge(isActive: device.isBooted)
         }
-        .padding(.vertical, 2)
+        .padding(.vertical, 6)
     }
 }
