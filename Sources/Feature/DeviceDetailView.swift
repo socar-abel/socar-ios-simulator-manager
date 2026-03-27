@@ -12,7 +12,6 @@ struct DeviceDetailView: View {
     @State private var showFilePicker = false
     @State private var installProgressMessage = ""
     @State private var deepLinkURL = ""
-    @FocusState private var isDeepLinkFieldFocused: Bool
 
     var body: some View {
         ScrollView {
@@ -98,10 +97,9 @@ struct DeviceDetailView: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("딥링크").font(.headline)
             HStack(spacing: 8) {
-                TextField("socar-v2://path 또는 https://...", text: $deepLinkURL)
-                    .textFieldStyle(.roundedBorder)
-                    .focused($isDeepLinkFieldFocused)
-                    .onSubmit { openDeepLink() }
+                FocusableTextField("socar-v2://path 또는 https://...", text: $deepLinkURL) {
+                    openDeepLink()
+                }
                 Button("실행") { openDeepLink() }
                     .buttonStyle(.borderedProminent)
                     .disabled(deepLinkURL.trimmingCharacters(in: .whitespaces).isEmpty || isPerformingAction)
