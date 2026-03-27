@@ -159,8 +159,8 @@ public final class SimulatorRepository<Dependency: SimulatorRepositoryDependency
 
     public func bringSimulatorToFront() async throws {
         _ = try await dependency.shell.run(
-            executable: "/usr/bin/open",
-            arguments: ["-a", "Simulator"]
+            executable: "/usr/bin/osascript",
+            arguments: ["-e", "tell application \"Simulator\" to activate"]
         )
     }
 
