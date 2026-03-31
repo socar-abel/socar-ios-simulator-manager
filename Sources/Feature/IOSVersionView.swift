@@ -255,7 +255,7 @@ public struct IOSVersionView: View {
                         ProgressView().scaleEffect(0.8)
                         if let progress = viewModel.downloadProgress,
                            case .installing = progress.status {
-                            Text("\(name) 설치 중...")
+                            Text("\(name) 등록 중...")
                                 .font(.callout).fontWeight(.medium)
                         } else {
                             Text("\(name) 다운로드 중")
@@ -272,7 +272,7 @@ public struct IOSVersionView: View {
                             ProgressView(value: 100, total: 100)
                                 .progressViewStyle(.linear)
                                 .tint(.green)
-                            Text("다운로드 완료. 시뮬레이터에 설치 중입니다. 이 작업은 시간이 오래 소요될 수 있습니다.")
+                            Text("다운로드 완료. Mac에 등록 중입니다. 이 작업은 시간이 오래 소요될 수 있습니다.")
                                 .font(.caption).foregroundStyle(.secondary)
                         } else {
                             ProgressView(value: progress.percent, total: 100)
