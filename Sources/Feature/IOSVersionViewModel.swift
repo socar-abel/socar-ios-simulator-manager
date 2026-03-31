@@ -88,11 +88,15 @@ public final class IOSVersionViewModel {
                     break
                 }
             }
+            // 로딩 해제 + 스낵바를 먼저 표시
+            isDeleting = false
+            deletingVersionId = nil
             if deleted {
                 successMessage = "\(version.displayName)이(가) 삭제되었습니다."
             } else {
                 successMessage = "\(version.displayName) 삭제가 진행 중입니다. 잠시 후 새로고침해주세요."
             }
+            // 다운로드 가능 목록 갱신은 백그라운드로 (네트워크 호출)
             await loadDownloadableVersions()
         } catch {
             errorMessage = error.localizedDescription
