@@ -221,9 +221,20 @@ public struct IOSVersionView: View {
                     Text(version.displayState).font(.caption).foregroundStyle(version.isReady ? .green : version.hasError ? .red : .orange)
                 }
                 if version.hasError {
-                    Text("터미널에서 다음 명령어를 실행해주세요: sudo xcrun simctl runtime delete \(version.identifier)")
-                        .font(.caption2).foregroundStyle(.red.opacity(0.8))
-                        .textSelection(.enabled)
+                    HStack(spacing: 6) {
+                        Text("터미널에서 아래 명령어를 실행해주세요")
+                            .font(.caption2).foregroundStyle(.red.opacity(0.8))
+                        Button {
+                            let cmd = "sudo xcrun simctl runtime delete \(version.identifier)"
+                            NSPasteboard.general.clearContents()
+                            NSPasteboard.general.setString(cmd, forType: .string)
+                        } label: {
+                            Label("명령어 복사", systemImage: "doc.on.doc")
+                                .font(.caption2)
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.mini)
+                    }
                 }
             }
 
