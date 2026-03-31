@@ -252,7 +252,17 @@ public struct IOSVersionView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 8))
             }
 
-            if viewModel.downloadableIOSVersions.isEmpty && !viewModel.isLoadingDownloadable && !viewModel.isLoading {
+            if viewModel.downloadableLoadFailed && !viewModel.isLoadingDownloadable {
+                HStack(spacing: 8) {
+                    Image(systemName: "wifi.slash").foregroundStyle(.orange)
+                    Text("다운로드 가능한 버전을 불러올 수 없습니다. 인터넷 연결을 확인해주세요.")
+                        .font(.caption).foregroundStyle(.secondary)
+                    Spacer()
+                    Button("재시도") { Task { await viewModel.loadDownloadableVersions() } }
+                        .buttonStyle(.bordered).controlSize(.small)
+                }
+                .padding(8)
+            } else if viewModel.downloadableIOSVersions.isEmpty && !viewModel.isLoadingDownloadable && !viewModel.isLoading {
                 Text("모든 iOS 버전이 이미 설치되어 있습니다.")
                     .font(.caption).foregroundStyle(.secondary)
                     .padding(.vertical, 8)

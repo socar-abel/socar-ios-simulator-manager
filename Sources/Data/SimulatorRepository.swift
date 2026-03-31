@@ -419,7 +419,58 @@ public enum SimulatorRepositoryError: LocalizedError {
     public var errorDescription: String? {
         switch self {
         case .commandFailed(let reason):
-            return "시뮬레이터 명령 실패: \(reason)"
+            return Self.friendlyMessage(for: reason)
         }
+    }
+
+    private static func friendlyMessage(for stderr: String) -> String {
+        let lower = stderr.lowercased()
+
+        // 호환성 문제
+        if lower.contains("incompatible device") || lower.contains("code=403") {
+            return "이 기기는 선택한 iOS 버전을 지원하지 않습니다. 다른 iOS 버전을 선택해주세요."
+        }
+        if lower.contains("invalid runtime") || lower.contains("runtime is not available") {
+            return "해당 iOS 버전이 설치되어 있지 않습니다. iOS 버전 탭에서 먼저 설치해주세요."
+        }
+        if lower.contains("is not available for download") {
+            return "이 iOS 버전은 현재 Xcode에서 지원하지 않습니다. Xcode를 업데이트해주세요."
+        }
+
+        // 부팅 관련
+        if lower.contains("unable to boot") || lower.contains("failed to boot") {
+            return "시뮬레이터를 실행할 수 없습니다. 다시 시도해주세요."
+        }
+        if lower.contains("already booted") {
+            return "이미 실행 중인 시뮬레이터입니다."
+        }
+
+        // 설치 관련
+        if lower.contains("no such file") || lower.contains("does not exist") {
+            return "파일을 찾을 수 없습니다. 경로를 확인해주세요."
+        }
+        if lower.contains("not a valid bundle") || lower.contains("invalid bundle") {
+            return "유효하지 않은 앱 파일입니다. .app 파일이 맞는지 확인해주세요."
+        }
+
+        // 권한/디스크
+        if lower.contains("permission denied") || lower.contains("operation not permitted") {
+            return "권한이 없습니다. 시스템 설정에서 권한을 확인해주세요."
+        }
+        if lower.contains("no space left") || lower.contains("disk full") {
+            return "디스크 공간이 부족합니다. 불필요한 iOS 버전이나 디바이스를 삭제해주세요."
+        }
+
+        // 네트워크
+        if lower.contains("network") || lower.contains("connection") || lower.contains("timed out") {
+            return "네트워크 연결에 실패했습니다. 인터넷 연결을 확인해주세요."
+        }
+
+        // 기타: 원문이 너무 길면 앞부분만
+        if stderr.count > 100 {
+            return "작업 중 오류가 발생했습니다. 다시 시도해주세요."
+        }
+
+        return "오류가 발생했습니다: \(stderr)"
     }
 }

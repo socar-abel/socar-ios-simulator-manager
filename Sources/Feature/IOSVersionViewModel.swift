@@ -14,6 +14,7 @@ public final class IOSVersionViewModel {
     public private(set) var downloadProgress: DownloadProgress?
     public private(set) var isDeleting = false
     public private(set) var deletingVersionId: String?
+    public private(set) var downloadableLoadFailed = false
     public private(set) var isCleaning = false
     public var errorMessage: String?
     public var successMessage: String?
@@ -55,8 +56,9 @@ public final class IOSVersionViewModel {
 
         do {
             downloadableIOSVersions = try await useCase.fetchDownloadableIOSVersions()
+            downloadableLoadFailed = false
         } catch {
-            // 네트워크 실패 시 조용히 무시 (설치된 목록은 표시)
+            downloadableLoadFailed = true
         }
     }
 
@@ -75,15 +77,21 @@ public final class IOSVersionViewModel {
 
         do {
             try await useCase.deleteIOSVersion(identifier: version.identifier)
-            // 실제 삭제 완료까지 폴링 (최대 30초)
-            for _ in 0..<15 {
+            // 실제 삭제 완료까지 폴링 (최대 60초)
+            var deleted = false
+            for _ in 0..<30 {
                 try? await Task.sleep(for: .seconds(2))
                 await silentRefresh()
                 if !installedIOSVersions.contains(where: { $0.identifier == version.identifier }) {
+                    deleted = true
                     break
                 }
             }
-            successMessage = "\(version.displayName)이(가) 삭제되었습니다."
+            if deleted {
+                successMessage = "\(version.displayName)이(가) 삭제되었습니다."
+            } else {
+                successMessage = "\(version.displayName) 삭제가 진행 중입니다. 잠시 후 새로고침해주세요."
+            }
             await loadDownloadableVersions()
         } catch {
             errorMessage = error.localizedDescription
