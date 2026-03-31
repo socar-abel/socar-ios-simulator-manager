@@ -174,6 +174,9 @@ public struct IOSVersionView: View {
                     Text("설치된 iOS 버전이 없습니다").foregroundStyle(.secondary)
                     Text("아래에서 원하는 버전을 다운로드하세요.")
                         .font(.caption).foregroundStyle(.tertiary)
+                    Text("💡 SOCAR 앱은 iOS 16.0 이상을 지원합니다. 최신 버전을 추천합니다.")
+                        .font(.caption).foregroundStyle(.blue)
+                        .padding(.top, 4)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 24)
@@ -306,22 +309,36 @@ public struct IOSVersionView: View {
                     .font(.caption).foregroundStyle(.secondary)
                     .padding(.vertical, 8)
             } else if !viewModel.downloadableIOSVersions.isEmpty {
-                ForEach(viewModel.downloadableIOSVersions) { version in
-                    downloadableRow(version)
+                if viewModel.installedIOSVersions.isEmpty {
+                    Text("💡 SOCAR 앱은 iOS 16.0 이상을 지원합니다. 최신 버전을 추천합니다.")
+                        .font(.caption).foregroundStyle(.blue)
+                }
+                ForEach(Array(viewModel.downloadableIOSVersions.enumerated()), id: \.element.id) { index, version in
+                    downloadableRow(version, isRecommended: index == 0 && viewModel.installedIOSVersions.isEmpty)
                 }
             }
         }
     }
 
-    private func downloadableRow(_ version: DownloadableIOSVersion) -> some View {
+    private func downloadableRow(_ version: DownloadableIOSVersion, isRecommended: Bool = false) -> some View {
         HStack(spacing: 12) {
-            Image(systemName: "arrow.down.circle")
+            Image(systemName: isRecommended ? "star.circle.fill" : "arrow.down.circle")
                 .font(.title2)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(isRecommended ? .orange : .secondary)
                 .frame(width: 28)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(version.shortName).font(.body).fontWeight(.medium)
+                HStack(spacing: 6) {
+                    Text(version.shortName).font(.body).fontWeight(.medium)
+                    if isRecommended {
+                        Text("추천")
+                            .font(.caption2).fontWeight(.semibold)
+                            .padding(.horizontal, 6).padding(.vertical, 2)
+                            .background(.orange.opacity(0.15))
+                            .foregroundStyle(.orange)
+                            .clipShape(Capsule())
+                    }
+                }
                 Text(version.displaySize).font(.caption).foregroundStyle(.secondary)
             }
 
