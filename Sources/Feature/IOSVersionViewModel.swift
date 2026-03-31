@@ -46,6 +46,8 @@ public final class IOSVersionViewModel {
             async let disk = useCase.fetchDiskUsage()
             installedIOSVersions = try await versions
             diskUsage = try await disk
+            // 등록 중(Unusable) 상태가 있으면 자동 폴링 시작
+            startPollingIfNeeded()
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -190,4 +192,32 @@ public final class IOSVersionViewModel {
 
     public func dismissError() { errorMessage = nil }
     public func dismissSuccess() { successMessage = nil }
+
+    // MARK: - Unusable 상태 자동 폴링
+
+    private var pollingTask: Task<Void, Never>?
+
+    private func startPollingIfNeeded() {
+        let hasUnusable = installedIOSVersions.contains { !$0.isReady && $0.state != "Deleting" }
+        guard hasUnusable else {
+            pollingTask?.cancel()
+            pollingTask = nil
+            return
+        }
+        // 이미 폴링 중이면 무시
+        guard pollingTask == nil else { return }
+        pollingTask = Task { [weak self] in
+            // 최대 5분간 5초 간격으로 폴링
+            for _ in 0..<60 {
+                try? await Task.sleep(for: .seconds(5))
+                guard !Task.isCancelled else { return }
+                await self?.silentRefresh()
+                // 모두 Ready가 되면 종료
+                if self?.installedIOSVersions.allSatisfy({ $0.isReady || $0.state == "Deleting" }) == true {
+                    break
+                }
+            }
+            self?.pollingTask = nil
+        }
+    }
 }
