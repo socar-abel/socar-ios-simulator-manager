@@ -218,7 +218,12 @@ public struct IOSVersionView: View {
                 }
                 HStack(spacing: 8) {
                     Text(version.displaySize).font(.caption).foregroundStyle(.secondary)
-                    Text(version.displayState).font(.caption).foregroundStyle(version.isReady ? .green : .orange)
+                    Text(version.displayState).font(.caption).foregroundStyle(version.isReady ? .green : version.hasError ? .red : .orange)
+                }
+                if version.hasError {
+                    Text("터미널에서 다음 명령어를 실행해주세요: sudo xcrun simctl runtime delete \(version.identifier)")
+                        .font(.caption2).foregroundStyle(.red.opacity(0.8))
+                        .textSelection(.enabled)
                 }
             }
 
