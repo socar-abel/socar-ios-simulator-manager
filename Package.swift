@@ -24,7 +24,8 @@ let package = Package(
         .executableTarget(
             name: "App",
             dependencies: ["Core", "Domain", "Data", "Feature"],
-            path: "Sources/App"
+            path: "Sources/App",
+            resources: [.process("Resources")]
         ),
     ]
 )

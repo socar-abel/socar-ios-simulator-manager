@@ -17,11 +17,9 @@ struct SOCARSimulatorManagerApp: App {
     }
 
     private static func setAppIcon() {
-        let config = NSImage.SymbolConfiguration(pointSize: 128, weight: .medium)
-            .applying(.init(paletteColors: [.systemBlue, .systemCyan]))
-        if let image = NSImage(systemSymbolName: "iphone.radiowaves.left.and.right", accessibilityDescription: "SOCAR Simulator Manager") {
-            let configured = image.withSymbolConfiguration(config) ?? image
-            NSApplication.shared.applicationIconImage = configured
+        if let url = Bundle.module.url(forResource: "AppIcon", withExtension: "png"),
+           let image = NSImage(contentsOf: url) {
+            NSApplication.shared.applicationIconImage = image
         }
     }
 
