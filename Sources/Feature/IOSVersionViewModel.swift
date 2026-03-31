@@ -132,22 +132,14 @@ public final class IOSVersionViewModel {
                     return
                 }
 
-                downloadProgress = DownloadProgress(status: .installing)
-                // 설치 등록 완료까지 폴링 (최대 30초) — 버전명으로 확인
-                let targetName = version.shortName
-                for _ in 0..<15 {
-                    await silentRefresh()
-                    if installedIOSVersions.contains(where: { $0.displayName == targetName }) {
-                        break
-                    }
-                    try? await Task.sleep(for: .seconds(2))
-                }
-                // 로딩 해제 + 스낵바 먼저
+                // xcodebuild 종료 = 다운로드+설치 완료
+                // 즉시 로딩 해제 + 스낵바
                 isDownloading = false
                 downloadingVersionName = nil
                 downloadProgress = nil
                 successMessage = "\(version.shortName) 다운로드가 완료되었습니다."
-                // 다운로드 목록 갱신은 후순위
+                // 백그라운드에서 목록 갱신
+                await silentRefresh()
                 await loadDownloadableVersions()
             } catch {
                 if !Task.isCancelled {
