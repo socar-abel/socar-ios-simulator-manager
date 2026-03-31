@@ -293,8 +293,22 @@ public final class SimulatorRepository<Dependency: SimulatorRepositoryDependency
 
     public func deleteIOSVersion(identifier: String) async throws {
         let result = try await dependency.shell.simctlArgs(["runtime", "delete", identifier])
-        guard result.isSuccess else {
-            throw SimulatorRepositoryError.commandFailed(result.stderr)
+        if result.isSuccess { return }
+
+        // 일반 삭제 실패 시 관리자 권한으로 재시도
+        let adminResult = try await dependency.shell.run(
+            executable: "/usr/bin/osascript",
+            arguments: [
+                "-e",
+                "do shell script \"xcrun simctl runtime delete \(identifier)\" with administrator privileges"
+            ]
+        )
+        guard adminResult.isSuccess else {
+            let stderr = adminResult.stderr
+            if stderr.contains("User canceled") || stderr.contains("canceled") {
+                throw SimulatorRepositoryError.commandFailed("사용자가 취소했습니다.")
+            }
+            throw SimulatorRepositoryError.commandFailed(stderr)
         }
     }
 
