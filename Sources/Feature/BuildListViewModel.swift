@@ -139,6 +139,23 @@ public struct AppBundleInfo {
         return result
     }
 
+    /// .app 번들의 전체 디스크 사용량
+    public var fileSize: String {
+        let fm = FileManager.default
+        guard let enumerator = fm.enumerator(at: appURL, includingPropertiesForKeys: [.fileSizeKey], options: [.skipsHiddenFiles]) else {
+            return ""
+        }
+        var totalSize: Int64 = 0
+        for case let fileURL as URL in enumerator {
+            if let size = try? fileURL.resourceValues(forKeys: [.fileSizeKey]).fileSize {
+                totalSize += Int64(size)
+            }
+        }
+        let formatter = ByteCountFormatter()
+        formatter.countStyle = .file
+        return formatter.string(fromByteCount: totalSize)
+    }
+
     /// 버전 설명 문자열 (rc, scheme 포함)
     public var versionDescription: String {
         // 1) 폴더명에서 시도

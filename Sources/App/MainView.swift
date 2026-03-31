@@ -33,6 +33,24 @@ struct MainView: View {
                 .tag(AppRoute.guide)
         }
         .listStyle(.sidebar)
+        .safeAreaInset(edge: .bottom) {
+            environmentInfo
+        }
+    }
+
+    private var environmentInfo: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            if let status = coordinator.environmentStatus {
+                if let xcodeVersion = status.xcodeVersion {
+                    Text("Xcode \(xcodeVersion)")
+                        .font(.caption2).foregroundStyle(.tertiary)
+                }
+            }
+            Text("macOS \(ProcessInfo.processInfo.operatingSystemVersionString)")
+                .font(.caption2).foregroundStyle(.tertiary)
+        }
+        .padding(.horizontal, 16)
+        .padding(.bottom, 8)
     }
 
     @ViewBuilder

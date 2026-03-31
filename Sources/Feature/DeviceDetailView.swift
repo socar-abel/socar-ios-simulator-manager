@@ -70,6 +70,7 @@ struct DeviceDetailView: View {
                             .font(.title2)
                             .fontWeight(.bold)
                             .onSubmit { commitRename(device) }
+                            .onExitCommand { isEditingName = false }
                         Button {
                             commitRename(device)
                         } label: {

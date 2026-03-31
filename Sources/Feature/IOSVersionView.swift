@@ -7,6 +7,7 @@ public struct IOSVersionView: View {
     @Bindable var viewModel: IOSVersionViewModel
 
     @State private var versionToDelete: InstalledIOSVersion?
+    @State private var versionToDownload: DownloadableIOSVersion?
 
     public init(viewModel: IOSVersionViewModel) {
         self.viewModel = viewModel
@@ -88,6 +89,26 @@ public struct IOSVersionView: View {
         } message: {
             if let version = versionToDelete {
                 Text("\(version.displayName) (\(version.displaySize))을(를) 삭제합니다. 이 버전을 사용하는 디바이스도 사용할 수 없게 됩니다.")
+            }
+        }
+        .confirmationDialog(
+            "iOS 버전을 다운로드하시겠습니까?",
+            isPresented: .init(
+                get: { versionToDownload != nil },
+                set: { if !$0 { versionToDownload = nil } }
+            ),
+            titleVisibility: .visible
+        ) {
+            if let version = versionToDownload {
+                Button("다운로드 (\(version.displaySize))") {
+                    let v = version
+                    versionToDownload = nil
+                    Task { await viewModel.downloadIOSVersion(v) }
+                }
+            }
+        } message: {
+            if let version = versionToDownload {
+                Text("\(version.shortName) (\(version.displaySize))을(를) 다운로드합니다. 수십 분이 소요될 수 있습니다.")
             }
         }
     }
@@ -232,10 +253,13 @@ public struct IOSVersionView: View {
                         ProgressView().scaleEffect(0.8)
                         Text("\(name) 다운로드 중")
                             .font(.callout).fontWeight(.medium)
+                        Spacer()
+                        Button("취소") { viewModel.cancelDownload() }
+                            .buttonStyle(.bordered)
+                            .controlSize(.small)
                     }
 
                     if let progress = viewModel.downloadProgress {
-                        // 진행률 바
                         ProgressView(value: progress.percent, total: 100)
                             .progressViewStyle(.linear)
 
@@ -294,7 +318,7 @@ public struct IOSVersionView: View {
                     .frame(width: 80)
             } else {
                 Button {
-                    Task { await viewModel.downloadIOSVersion(version) }
+                    versionToDownload = version
                 } label: {
                     Label("다운로드", systemImage: "arrow.down.to.line")
                 }

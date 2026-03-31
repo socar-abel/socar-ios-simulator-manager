@@ -186,8 +186,16 @@ public struct BuildListView: View {
                             .clipShape(Capsule())
                     }
                 }
-                Text(info.versionDescription)
-                    .font(.callout).foregroundStyle(.secondary)
+                HStack(spacing: 8) {
+                    Text(info.versionDescription)
+                        .font(.callout).foregroundStyle(.secondary)
+                    if !info.fileSize.isEmpty {
+                        Text("·")
+                            .foregroundStyle(.tertiary)
+                        Text(info.fileSize)
+                            .font(.callout).foregroundStyle(.tertiary)
+                    }
+                }
             }
 
             Spacer()

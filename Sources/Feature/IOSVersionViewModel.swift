@@ -15,6 +15,7 @@ public final class IOSVersionViewModel {
     public private(set) var isDeleting = false
     public private(set) var deletingVersionId: String?
     public private(set) var downloadableLoadFailed = false
+    private var downloadTask: Task<Void, Never>?
     public private(set) var isCleaning = false
     public var errorMessage: String?
     public var successMessage: String?
@@ -103,36 +104,57 @@ public final class IOSVersionViewModel {
         downloadingVersionName = version.shortName
         downloadProgress = DownloadProgress(status: .preparing)
         errorMessage = nil
-        defer {
-            isDownloading = false
-            downloadingVersionName = nil
-            downloadProgress = nil
-        }
 
-        do {
-            try await useCase.downloadIOSVersionWithProgress(
-                platform: "iOS",
-                buildVersion: version.buildVersion
-            ) { [weak self] progress in
-                Task { @MainActor in
-                    self?.downloadProgress = progress
+        downloadTask = Task {
+            defer {
+                isDownloading = false
+                downloadingVersionName = nil
+                downloadProgress = nil
+                downloadTask = nil
+            }
+
+            do {
+                try await useCase.downloadIOSVersionWithProgress(
+                    platform: "iOS",
+                    buildVersion: version.buildVersion
+                ) { [weak self] progress in
+                    Task { @MainActor in
+                        self?.downloadProgress = progress
+                    }
+                }
+
+                guard !Task.isCancelled else {
+                    successMessage = "\(version.shortName) 다운로드가 취소되었습니다."
+                    return
+                }
+
+                downloadProgress = DownloadProgress(status: .installing)
+                // 설치 등록 완료까지 폴링 (최대 30초) — 버전명으로 확인
+                let targetName = version.shortName
+                for _ in 0..<15 {
+                    await silentRefresh()
+                    if installedIOSVersions.contains(where: { $0.displayName == targetName }) {
+                        break
+                    }
+                    try? await Task.sleep(for: .seconds(2))
+                }
+                successMessage = "\(version.shortName) 다운로드가 완료되었습니다."
+                await loadDownloadableVersions()
+            } catch {
+                if !Task.isCancelled {
+                    errorMessage = "\(version.shortName) 다운로드 실패: \(error.localizedDescription)"
                 }
             }
-            downloadProgress = DownloadProgress(status: .installing)
-            // 설치 등록 완료까지 폴링 (최대 30초) — 버전명으로 확인
-            let targetName = version.shortName
-            for _ in 0..<15 {
-                await silentRefresh()
-                if installedIOSVersions.contains(where: { $0.displayName == targetName }) {
-                    break
-                }
-                try? await Task.sleep(for: .seconds(2))
-            }
-            successMessage = "\(version.shortName) 다운로드가 완료되었습니다."
-            await loadDownloadableVersions()
-        } catch {
-            errorMessage = "\(version.shortName) 다운로드 실패: \(error.localizedDescription)"
         }
+    }
+
+    public func cancelDownload() {
+        downloadTask?.cancel()
+        downloadTask = nil
+        isDownloading = false
+        downloadingVersionName = nil
+        downloadProgress = nil
+        successMessage = "다운로드가 취소되었습니다."
     }
 
     public func cleanupUnavailableDevices() async {
