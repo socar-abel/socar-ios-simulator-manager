@@ -49,6 +49,10 @@ public final class FileRepository: FileRepositoryInterface {
     }
 
     public func listLocalApps() -> [URL] {
+        // 디렉토리가 삭제된 경우 재생성
+        if !FileManager.default.fileExists(atPath: buildsDirectory.path) {
+            try? FileManager.default.createDirectory(at: buildsDirectory, withIntermediateDirectories: true)
+        }
         guard let enumerator = FileManager.default.enumerator(
             at: buildsDirectory,
             includingPropertiesForKeys: [.isDirectoryKey],
@@ -67,12 +71,22 @@ public final class FileRepository: FileRepositoryInterface {
 
     public func deleteLocalBuild(at path: URL) throws {
         let parentDir = path.deletingLastPathComponent()
-        if parentDir.path.hasPrefix(buildsDirectory.path) {
+        // parentDir이 buildsDirectory 자체이면 .app만 삭제 (전체 삭제 방지)
+        // parentDir이 buildsDirectory 하위 폴더이면 폴더째 삭제
+        if parentDir.path == buildsDirectory.path {
+            // Builds/SOCAR.app → .app만 삭제
+            try FileManager.default.removeItem(at: path)
+        } else if parentDir.path.hasPrefix(buildsDirectory.path) {
+            // Builds/extracted/SOCAR.app → extracted 폴더째 삭제
             try FileManager.default.removeItem(at: parentDir)
         }
     }
 
     public func copyToBuildDirectory(from source: URL) throws -> URL {
+        // 디렉토리가 삭제된 경우 재생성
+        if !FileManager.default.fileExists(atPath: buildsDirectory.path) {
+            try FileManager.default.createDirectory(at: buildsDirectory, withIntermediateDirectories: true)
+        }
         let destination = buildsDirectory.appendingPathComponent(source.lastPathComponent)
         if FileManager.default.fileExists(atPath: destination.path) {
             try FileManager.default.removeItem(at: destination)

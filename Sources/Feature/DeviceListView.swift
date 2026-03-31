@@ -26,7 +26,7 @@ public struct DeviceListView: View {
 
             // 삭제 중 오버레이
             if viewModel.isDeleting, let name = viewModel.deletingDeviceName {
-                Color.black.opacity(0.3)
+                Color.black.opacity(0.5)
                     .ignoresSafeArea()
                 VStack(spacing: 16) {
                     ProgressView()
@@ -42,7 +42,7 @@ public struct DeviceListView: View {
 
             // 생성 중 오버레이
             if viewModel.isCreating, let name = viewModel.creatingDeviceName {
-                Color.black.opacity(0.3)
+                Color.black.opacity(0.5)
                     .ignoresSafeArea()
                 VStack(spacing: 16) {
                     ProgressView()

@@ -10,6 +10,7 @@ public struct GuideView: View {
                 titleSection
                 quickStartSection
                 tabGuideSection
+                tipsSection
                 faqSection
             }
             .padding(32)
@@ -105,6 +106,35 @@ public struct GuideView: View {
                     "사용 불가능한 디바이스 일괄 정리"
                 ]
             )
+        }
+    }
+
+    // MARK: - Tips
+
+    private var tipsSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            sectionTitle("유용한 팁", icon: "lightbulb.fill", color: .yellow)
+
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 8) {
+                    Image(systemName: "safari").foregroundStyle(.blue)
+                    Text("Safari 콘솔 로그 확인하기").font(.headline)
+                }
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("시뮬레이터에서 앱을 실행한 후 Safari를 사용하면 콘솔 로그를 확인할 수 있습니다.")
+                        .font(.callout).foregroundStyle(.secondary)
+                    Text("1. Mac에서 Safari를 열고 설정 > 고급 > '메뉴 막대에서 개발자용 메뉴 보기'를 활성화합니다.")
+                        .font(.callout).foregroundStyle(.secondary)
+                    Text("2. Safari 메뉴 막대에서 '개발자용' > 시뮬레이터 이름 > 앱 이름을 선택합니다.")
+                        .font(.callout).foregroundStyle(.secondary)
+                    Text("3. Web Inspector가 열리며 콘솔, 네트워크, 요소 등을 확인할 수 있습니다.")
+                        .font(.callout).foregroundStyle(.secondary)
+                }
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(.background.secondary)
+            .clipShape(RoundedRectangle(cornerRadius: 10))
         }
     }
 
