@@ -32,13 +32,53 @@ struct OnboardingView: View {
                 stepRow(
                     number: 2,
                     title: "Xcode 한 번 실행",
-                    description: "설치 후 Xcode를 한 번 열어서 초기 설정을 완료해주세요.",
+                    description: "설치 후 Xcode를 한 번 열어서 라이선스 동의 + 초기 설정을 완료해주세요.",
                     isDone: status.xcodeInstalled && status.commandLineToolsInstalled
                 )
             }
             .padding(28)
             .background(.background.secondary)
             .clipShape(RoundedRectangle(cornerRadius: 16))
+
+            // Xcode는 있지만 CLT 경로가 안 잡힌 경우
+            if status.xcodeInstalled && !status.commandLineToolsInstalled {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundStyle(.orange)
+                        Text("Xcode 경로 설정이 필요합니다")
+                            .font(.body).fontWeight(.medium)
+                    }
+                    Text("Xcode를 한 번 실행해서 초기 설정을 완료해주세요.")
+                        .font(.callout).foregroundStyle(.secondary)
+                    Text("그래도 안 되면 터미널에서 아래 명령어를 실행해주세요:")
+                        .font(.callout).foregroundStyle(.secondary)
+                    HStack(spacing: 8) {
+                        Text("sudo xcode-select -s /Applications/Xcode.app/Contents/Developer")
+                            .font(.system(.caption, design: .monospaced))
+                            .foregroundStyle(.primary)
+                            .padding(8)
+                            .background(.background.tertiary)
+                            .clipShape(RoundedRectangle(cornerRadius: 6))
+                        Button {
+                            NSPasteboard.general.clearContents()
+                            NSPasteboard.general.setString(
+                                "sudo xcode-select -s /Applications/Xcode.app/Contents/Developer",
+                                forType: .string
+                            )
+                        } label: {
+                            Label("복사", systemImage: "doc.on.doc")
+                                .font(.caption)
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
+                    }
+                }
+                .padding(20)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(.orange.opacity(0.06))
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+            }
 
             if !status.xcodeInstalled {
                 VStack(spacing: 16) {

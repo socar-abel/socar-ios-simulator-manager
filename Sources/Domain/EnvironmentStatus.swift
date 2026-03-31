@@ -59,7 +59,7 @@ public enum EnvironmentIssue: Sendable {
     public var description: String {
         switch self {
         case .xcodeNotInstalled: return "App Store에서 Xcode를 설치한 후, 한 번 실행하여 라이선스 동의와 추가 컴포넌트 설치를 완료해주세요."
-        case .commandLineToolsNotInstalled: return "Xcode를 한 번 실행하여 초기 설정을 완료하거나, 터미널에서 'xcode-select --install'을 실행해주세요."
+        case .commandLineToolsNotInstalled: return "Xcode를 한 번 실행하여 초기 설정을 완료해주세요. 그래도 안 되면 터미널에서 다음 명령어를 실행해주세요: sudo xcode-select -s /Applications/Xcode.app/Contents/Developer"
         case .noRuntimesAvailable: return "iOS 버전 탭에서 원하는 버전을 다운로드할 수 있습니다."
         }
     }

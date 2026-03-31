@@ -444,6 +444,11 @@ public enum SimulatorRepositoryError: LocalizedError {
     private static func friendlyMessage(for stderr: String) -> String {
         let lower = stderr.lowercased()
 
+        // Xcode/Command Line Tools 미설정
+        if lower.contains("unable to find utility") || lower.contains("not a developer tool") {
+            return "Xcode Command Line Tools가 설정되지 않았습니다.\n터미널에서 다음 명령어를 실행해주세요:\nsudo xcode-select -s /Applications/Xcode.app/Contents/Developer"
+        }
+
         // 호환성 문제
         if lower.contains("incompatible device") || lower.contains("code=403") {
             return "이 기기는 선택한 iOS 버전을 지원하지 않습니다. 다른 iOS 버전을 선택해주세요."
