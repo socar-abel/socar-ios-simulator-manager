@@ -142,7 +142,12 @@ public final class IOSVersionViewModel {
                     }
                     try? await Task.sleep(for: .seconds(2))
                 }
+                // 로딩 해제 + 스낵바 먼저
+                isDownloading = false
+                downloadingVersionName = nil
+                downloadProgress = nil
                 successMessage = "\(version.shortName) 다운로드가 완료되었습니다."
+                // 다운로드 목록 갱신은 후순위
                 await loadDownloadableVersions()
             } catch {
                 if !Task.isCancelled {
@@ -164,13 +169,14 @@ public final class IOSVersionViewModel {
     public func cleanupUnavailableDevices() async {
         isCleaning = true
         errorMessage = nil
-        defer { isCleaning = false }
 
         do {
             try await useCase.deleteAllUnavailableDevices()
+            isCleaning = false
             successMessage = "사용 불가능한 디바이스가 정리되었습니다."
             await refreshAll()
         } catch {
+            isCleaning = false
             errorMessage = error.localizedDescription
         }
     }
