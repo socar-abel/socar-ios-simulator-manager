@@ -240,7 +240,8 @@ public final class SimulatorRepository<Dependency: SimulatorRepositoryDependency
                     sizeBytes: dto.sizeBytes ?? 0,
                     isDeletable: dto.deletable ?? false,
                     state: dto.state ?? "Unknown",
-                    lastUsedAt: dto.lastUsedAt
+                    lastUsedAt: dto.lastUsedAt,
+                    errorMessage: dto.unusableErrorMessage
                 )
             }
             .sorted { $0.version > $1.version }

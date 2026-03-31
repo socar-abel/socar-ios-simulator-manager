@@ -57,6 +57,7 @@ struct SimctlIOSVersionDetailDTO: Codable {
     let state: String?
     let lastUsedAt: String?
     let platformIdentifier: String?
+    let unusableErrorMessage: String?
 }
 
 // MARK: - Apple CDN Downloadable Index

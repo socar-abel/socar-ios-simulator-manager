@@ -198,8 +198,9 @@ public final class IOSVersionViewModel {
     private var pollingTask: Task<Void, Never>?
 
     private func startPollingIfNeeded() {
-        let hasUnusable = installedIOSVersions.contains { !$0.isReady && $0.state != "Deleting" }
-        guard hasUnusable else {
+        // 에러 없는 Unusable만 폴링 대상 (에러가 있으면 영원히 Ready 안 됨)
+        let hasPendingUnusable = installedIOSVersions.contains { !$0.isReady && !$0.hasError && $0.state != "Deleting" }
+        guard hasPendingUnusable else {
             pollingTask?.cancel()
             pollingTask = nil
             return
@@ -213,7 +214,7 @@ public final class IOSVersionViewModel {
                 guard !Task.isCancelled else { return }
                 await self?.silentRefresh()
                 // 모두 Ready가 되면 종료
-                if self?.installedIOSVersions.allSatisfy({ $0.isReady || $0.state == "Deleting" }) == true {
+                if self?.installedIOSVersions.allSatisfy({ $0.isReady || $0.hasError || $0.state == "Deleting" }) == true {
                     break
                 }
             }
