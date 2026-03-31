@@ -231,7 +231,10 @@ public final class SimulatorRepository<Dependency: SimulatorRepositoryDependency
 
         let raw = try JSONDecoder().decode([String: SimctlIOSVersionDetailDTO].self, from: data)
         return raw.values
-            .filter { $0.platformIdentifier?.contains("iphonesimulator") == true }
+            .filter {
+                $0.platformIdentifier?.contains("iphonesimulator") == true
+                && $0.unusableErrorMessage == nil  // 에러가 있는 유령 런타임은 숨김
+            }
             .map { dto in
                 InstalledIOSVersion(
                     identifier: dto.identifier,
