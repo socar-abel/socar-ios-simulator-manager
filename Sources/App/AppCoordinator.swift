@@ -33,22 +33,9 @@ final class AppCoordinator {
         self.assembly = assembly
     }
 
-    // ⚠️ 테스트용: true로 변경하면 Xcode 미설치 상태를 시뮬레이션
-    private let simulateNoXcode = true
-
     func start() async {
         isCheckingEnvironment = true
-        if simulateNoXcode {
-            environmentStatus = EnvironmentStatus(
-                xcodeInstalled: false,
-                xcodePath: nil,
-                xcodeVersion: nil,
-                commandLineToolsInstalled: false,
-                availableRuntimes: []
-            )
-        } else {
-            environmentStatus = await assembly.environmentCheckUseCase().check()
-        }
+        environmentStatus = await assembly.environmentCheckUseCase().check()
         isCheckingEnvironment = false
 
         guard environmentStatus?.isReady == true else { return }

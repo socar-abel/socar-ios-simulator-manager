@@ -157,15 +157,17 @@ public final class DeviceListViewModel {
         }
     }
 
-    /// 상태가 반영될 때까지 최대 5회 폴링
+    /// 상태가 반영될 때까지 최대 10회 폴링 (5초)
     private func refreshUntilState(udid: String, expectedState: String) async {
-        for _ in 0..<5 {
+        for _ in 0..<10 {
             await refreshAll()
             if devices.first(where: { $0.udid == udid })?.state == expectedState {
                 return
             }
             try? await Task.sleep(for: .milliseconds(500))
         }
+        // 폴링 실패 시에도 한 번 더 새로고침
+        await refreshAll()
     }
 
     public func bringSimulatorToFront() async throws {
@@ -214,23 +216,24 @@ public final class DeviceListViewModel {
             deletingDeviceName = nil
         }
 
-        var failCount = 0
+        var failedNames: [String] = []
         for udid in selectedUDIDs {
+            let name = devices.first { $0.udid == udid }?.name ?? udid
             do {
                 try await useCase.deleteDevice(udid: udid)
             } catch {
-                failCount += 1
+                failedNames.append(name)
             }
         }
 
-        let deletedCount = count - failCount
+        let deletedCount = count - failedNames.count
         selectedUDIDs.removeAll()
         selectedDevice = nil
         isMultiSelectMode = false
         await refreshAll()
 
-        if failCount > 0 {
-            errorMessage = "\(deletedCount)개 삭제 완료, \(failCount)개 삭제 실패"
+        if !failedNames.isEmpty {
+            errorMessage = "\(deletedCount)개 삭제 완료. 삭제 실패: \(failedNames.joined(separator: ", "))"
         } else {
             successMessage = "\(deletedCount)개 디바이스가 삭제되었습니다."
         }

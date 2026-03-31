@@ -190,8 +190,8 @@ struct DeviceDetailView: View {
     private func info(_ device: SimulatorDevice) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("정보").font(.headline)
-            infoRow("UDID", value: device.udid)
-            if let dt = device.deviceTypeIdentifier { infoRow("디바이스 타입", value: dt) }
+            infoRow("기기 ID", value: device.udid)
+            if let dt = device.deviceTypeIdentifier { infoRow("기기 모델", value: dt) }
             if let rt = device.runtimeIdentifier { infoRow("런타임", value: rt) }
         }
     }

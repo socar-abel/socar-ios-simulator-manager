@@ -309,17 +309,30 @@ public struct IOSVersionView: View {
 
     // MARK: - Cleanup
 
+    @State private var showCleanupConfirmation = false
+
     private var cleanupSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("정리").font(.headline)
 
             Button {
-                Task { await viewModel.cleanupUnavailableDevices() }
+                showCleanupConfirmation = true
             } label: {
                 Label("사용 불가능한 디바이스 모두 삭제", systemImage: "trash.circle")
             }
             .buttonStyle(.bordered)
             .disabled(viewModel.isCleaning)
+            .confirmationDialog(
+                "사용 불가능한 디바이스를 모두 삭제하시겠습니까?",
+                isPresented: $showCleanupConfirmation,
+                titleVisibility: .visible
+            ) {
+                Button("모두 삭제", role: .destructive) {
+                    Task { await viewModel.cleanupUnavailableDevices() }
+                }
+            } message: {
+                Text("삭제된 iOS 버전을 사용하던 디바이스가 영구적으로 제거됩니다. 이 작업은 되돌릴 수 없습니다.")
+            }
 
             Text("iOS 버전이 삭제되어 더 이상 사용할 수 없는 디바이스를 일괄 정리합니다.")
                 .font(.caption).foregroundStyle(.secondary)

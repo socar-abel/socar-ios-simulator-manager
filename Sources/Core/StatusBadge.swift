@@ -12,5 +12,6 @@ public struct StatusBadge: View {
         Circle()
             .fill(isActive ? .green : .gray)
             .frame(width: 8, height: 8)
+            .accessibilityLabel(isActive ? "실행중" : "종료됨")
     }
 }
