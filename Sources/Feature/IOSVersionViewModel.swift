@@ -123,7 +123,22 @@ public final class IOSVersionViewModel {
                     buildVersion: version.buildVersion
                 ) { [weak self] progress in
                     Task { @MainActor in
-                        self?.downloadProgress = progress
+                        guard let self else { return }
+                        // 상태 변경 또는 1% 이상 차이일 때만 UI 갱신
+                        if let current = self.downloadProgress {
+                            let statusChanged = {
+                                switch (current.status, progress.status) {
+                                case (.preparing, .preparing), (.downloading, .downloading), (.installing, .installing):
+                                    return false
+                                default:
+                                    return true
+                                }
+                            }()
+                            if !statusChanged && abs(progress.percent - current.percent) < 1.0 {
+                                return
+                            }
+                        }
+                        self.downloadProgress = progress
                     }
                 }
 
