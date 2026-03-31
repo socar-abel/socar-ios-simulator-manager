@@ -33,6 +33,8 @@ public struct IOSVersionView: View {
                 VStack(spacing: 16) {
                     ProgressView().scaleEffect(1.2)
                     Text("iOS 버전 삭제 중...").font(.headline).foregroundStyle(.white)
+                    Text("이 작업은 시간이 오래 소요될 수 있습니다.")
+                        .font(.caption).foregroundStyle(.white.opacity(0.7))
                 }
                 .padding(32)
                 .background(.ultraThinMaterial)
