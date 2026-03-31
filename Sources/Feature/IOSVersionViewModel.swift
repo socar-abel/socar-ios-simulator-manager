@@ -134,7 +134,7 @@ public final class IOSVersionViewModel {
                                     return true
                                 }
                             }()
-                            if !statusChanged && abs(progress.percent - current.percent) < 1.0 {
+                            if !statusChanged && abs(progress.percent - current.percent) < 0.5 {
                                 return
                             }
                         }
