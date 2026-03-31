@@ -174,7 +174,7 @@ public struct IOSVersionView: View {
                     Text("설치된 iOS 버전이 없습니다").foregroundStyle(.secondary)
                     Text("아래에서 원하는 버전을 다운로드하세요.")
                         .font(.caption).foregroundStyle(.tertiary)
-                    Text("💡 SOCAR 앱은 iOS 16.0 이상을 지원합니다.")
+                    Text("💡 SOCAR 앱의 최소 호환 iOS 버전은 App Store에서 확인할 수 있습니다.")
                         .font(.caption).foregroundStyle(.blue)
                         .padding(.top, 4)
                 }
@@ -310,7 +310,7 @@ public struct IOSVersionView: View {
                     .padding(.vertical, 8)
             } else if !viewModel.downloadableIOSVersions.isEmpty {
                 if viewModel.installedIOSVersions.isEmpty {
-                    Text("💡 SOCAR 앱은 iOS 16.0 이상을 지원합니다.")
+                    Text("💡 SOCAR 앱의 최소 호환 iOS 버전은 App Store에서 확인할 수 있습니다.")
                         .font(.caption).foregroundStyle(.blue)
                 }
                 ForEach(viewModel.downloadableIOSVersions) { version in
