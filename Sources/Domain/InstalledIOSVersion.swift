@@ -32,6 +32,16 @@ public struct InstalledIOSVersion: Identifiable, Hashable, Sendable {
 
     public var isReady: Bool { state == "Ready" }
 
+    /// 사용자에게 보여줄 상태 문구
+    public var displayState: String {
+        switch state {
+        case "Ready": return "Ready"
+        case "Unusable": return "등록 중... (잠시 기다려주세요)"
+        case "Deleting": return "삭제 중..."
+        default: return state
+        }
+    }
+
     public init(
         identifier: String,
         runtimeIdentifier: String,

@@ -218,7 +218,7 @@ public struct IOSVersionView: View {
                 }
                 HStack(spacing: 8) {
                     Text(version.displaySize).font(.caption).foregroundStyle(.secondary)
-                    Text(version.state).font(.caption).foregroundStyle(version.isReady ? .green : .orange)
+                    Text(version.displayState).font(.caption).foregroundStyle(version.isReady ? .green : .orange)
                 }
             }
 
