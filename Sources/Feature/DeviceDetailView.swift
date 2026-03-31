@@ -5,10 +5,12 @@ import Core
 struct DeviceDetailView: View {
 
     @Bindable var viewModel: DeviceListViewModel
+    var buildListViewModel: BuildListViewModel?
 
     @State private var isPerformingAction = false
     @State private var showDeleteConfirmation = false
     @State private var showFilePicker = false
+    @State private var showAppListPicker = false
     @State private var installProgressMessage = ""
     @State private var deepLinkURL = ""
     @State private var isEditingName = false
@@ -43,6 +45,13 @@ struct DeviceDetailView: View {
             allowsMultipleSelection: false
         ) { result in
             handleFileImport(result)
+        }
+        .sheet(isPresented: $showAppListPicker) {
+            if let device, let buildVM = buildListViewModel {
+                AppListPickerSheet(deviceUDID: device.udid, viewModel: viewModel, buildListViewModel: buildVM) {
+                    showAppListPicker = false
+                }
+            }
         }
         .confirmationDialog(
             "'\(device?.name ?? "")' 디바이스를 삭제하시겠습니까?",
@@ -175,7 +184,10 @@ struct DeviceDetailView: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("앱 관리").font(.headline)
             HStack(spacing: 12) {
-                ActionButton("앱 설치 (.app / .zip)", icon: "square.and.arrow.down", style: .primary) {
+                ActionButton("앱 목록에서 설치", icon: "list.bullet", style: .primary) {
+                    showAppListPicker = true
+                }
+                ActionButton("파일에서 직접 설치", icon: "folder", style: .secondary) {
                     showFilePicker = true
                 }
             }
@@ -222,6 +234,114 @@ struct DeviceDetailView: View {
                 try await viewModel.installApp(udid: device.udid, appPath: url)
             } catch {
                 viewModel.errorMessage = error.localizedDescription
+            }
+        }
+    }
+}
+
+// MARK: - App List Picker Sheet
+
+struct AppListPickerSheet: View {
+    let deviceUDID: String
+    @Bindable var viewModel: DeviceListViewModel
+    @Bindable var buildListViewModel: BuildListViewModel
+    let onDismiss: () -> Void
+
+    @State private var isInstalling = false
+    @State private var installError: String?
+
+    private var localApps: [URL] {
+        buildListViewModel.localApps()
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack {
+                Text("앱 목록에서 설치").font(.headline)
+                Spacer()
+                Button("취소") { onDismiss() }
+                    .buttonStyle(.borderless)
+                    .keyboardShortcut(.cancelAction)
+                    .disabled(isInstalling)
+            }
+            .padding()
+            Divider()
+
+            if let error = installError {
+                HStack(spacing: 8) {
+                    Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.red)
+                    Text(error).font(.caption).foregroundStyle(.red)
+                    Spacer()
+                }
+                .padding(.horizontal).padding(.vertical, 8)
+                .background(.red.opacity(0.05))
+            }
+
+            if isInstalling {
+                VStack(spacing: 12) {
+                    ProgressView()
+                    Text("설치 중...").font(.callout).foregroundStyle(.secondary)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if localApps.isEmpty {
+                VStack(spacing: 12) {
+                    Image(systemName: "app.dashed")
+                        .font(.system(size: 36))
+                        .foregroundStyle(.secondary)
+                    Text("앱 목록이 비어있습니다")
+                        .font(.headline).foregroundStyle(.secondary)
+                    Text("'앱 목록' 탭에서 먼저 빌드 파일을 추가해주세요.")
+                        .font(.caption).foregroundStyle(.tertiary)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                List {
+                    ForEach(localApps, id: \.path) { appURL in
+                        let info = AppBundleInfo(appURL: appURL)
+                        Button {
+                            install(appURL: appURL)
+                        } label: {
+                            HStack(spacing: 12) {
+                                if let icon = info.iconImage {
+                                    Image(nsImage: icon)
+                                        .resizable()
+                                        .frame(width: 32, height: 32)
+                                        .clipShape(RoundedRectangle(cornerRadius: 7))
+                                } else {
+                                    Image(systemName: "app.fill")
+                                        .font(.title2)
+                                        .foregroundStyle(.blue)
+                                        .frame(width: 32, height: 32)
+                                }
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(info.displayName ?? appURL.lastPathComponent)
+                                        .fontWeight(.medium)
+                                    Text(info.versionDescription)
+                                        .font(.caption).foregroundStyle(.secondary)
+                                }
+                                Spacer()
+                                Text("설치").foregroundStyle(.blue)
+                            }
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+        }
+        .frame(width: 450, height: 400)
+    }
+
+    private func install(appURL: URL) {
+        isInstalling = true
+        installError = nil
+        Task {
+            do {
+                try await viewModel.installApp(udid: deviceUDID, appPath: appURL)
+                viewModel.successMessage = "\(appURL.lastPathComponent)을(를) 설치했습니다."
+                onDismiss()
+            } catch {
+                installError = error.localizedDescription
+                isInstalling = false
             }
         }
     }

@@ -76,7 +76,7 @@ public struct BuildListView: View {
 
     private var header: some View {
         HStack {
-            Text("빌드 관리").font(.headline)
+            Text("앱 목록").font(.headline)
             Spacer()
             if viewModel.isAdding {
                 HStack(spacing: 6) {

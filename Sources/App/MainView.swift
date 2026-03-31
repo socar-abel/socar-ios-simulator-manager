@@ -24,7 +24,7 @@ struct MainView: View {
         List(selection: $coordinator.selectedTab) {
             Label("디바이스", systemImage: "iphone")
                 .tag(AppRoute.devices)
-            Label("빌드", systemImage: "shippingbox")
+            Label("앱 목록", systemImage: "shippingbox")
                 .tag(AppRoute.builds)
             Label("iOS 버전", systemImage: "cpu")
                 .tag(AppRoute.iosVersions)
@@ -82,7 +82,7 @@ struct MainView: View {
         switch coordinator.selectedTab {
         case .devices:
             if let vm = coordinator.deviceListViewModel {
-                DeviceListView(viewModel: vm)
+                DeviceListView(viewModel: vm, buildListViewModel: coordinator.buildListViewModel)
             }
         case .builds:
             if let vm = coordinator.buildListViewModel {

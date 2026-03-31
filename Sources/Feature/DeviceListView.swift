@@ -5,11 +5,13 @@ import Core
 public struct DeviceListView: View {
 
     @Bindable var viewModel: DeviceListViewModel
+    var buildListViewModel: BuildListViewModel?
     @State private var showCreateSheet = false
     @State private var showDeleteSelectedConfirmation = false
 
-    public init(viewModel: DeviceListViewModel) {
+    public init(viewModel: DeviceListViewModel, buildListViewModel: BuildListViewModel? = nil) {
         self.viewModel = viewModel
+        self.buildListViewModel = buildListViewModel
     }
 
     public var body: some View {
@@ -295,7 +297,7 @@ public struct DeviceListView: View {
     @ViewBuilder
     private var detailPanel: some View {
         if viewModel.selectedDevice != nil, !viewModel.isMultiSelectMode {
-            DeviceDetailView(viewModel: viewModel)
+            DeviceDetailView(viewModel: viewModel, buildListViewModel: buildListViewModel)
         } else if viewModel.isMultiSelectMode {
             VStack(spacing: 12) {
                 Image(systemName: "checkmark.circle")
