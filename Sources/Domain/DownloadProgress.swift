@@ -38,11 +38,7 @@ public struct DownloadProgress: Sendable {
 
     /// xcodebuild stdout 라인 파싱
     public static func parse(line: String) -> DownloadProgress? {
-        if line.contains("Preparing to download") {
-            return DownloadProgress(status: .preparing)
-        }
-
-        if line.contains("Finding content") {
+        if line.contains("Preparing to download") || line.contains("Finding content") {
             return DownloadProgress(status: .preparing)
         }
 
@@ -54,7 +50,17 @@ public struct DownloadProgress: Sendable {
             let downloaded = String(line[Range(match.range(at: 2), in: line)!])
             let total = String(line[Range(match.range(at: 3), in: line)!])
             let percent = Double(percentStr) ?? 0
+            // 100% 도달 시 설치 단계로 전환
+            if percent >= 100 {
+                return DownloadProgress(percent: 100, downloaded: downloaded, total: total, status: .installing)
+            }
             return DownloadProgress(percent: percent, downloaded: downloaded, total: total, status: .downloading)
+        }
+
+        // 다운로드 후 설치/검증 단계 메시지
+        let lower = line.lowercased()
+        if lower.contains("installing") || lower.contains("verifying") || lower.contains("mounting") {
+            return DownloadProgress(percent: 100, status: .installing)
         }
 
         return nil

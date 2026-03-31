@@ -253,8 +253,14 @@ public struct IOSVersionView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack(spacing: 8) {
                         ProgressView().scaleEffect(0.8)
-                        Text("\(name) 다운로드 중")
-                            .font(.callout).fontWeight(.medium)
+                        if let progress = viewModel.downloadProgress,
+                           case .installing = progress.status {
+                            Text("\(name) 설치 중...")
+                                .font(.callout).fontWeight(.medium)
+                        } else {
+                            Text("\(name) 다운로드 중")
+                                .font(.callout).fontWeight(.medium)
+                        }
                         Spacer()
                         Button("취소") { viewModel.cancelDownload() }
                             .buttonStyle(.bordered)
@@ -262,11 +268,18 @@ public struct IOSVersionView: View {
                     }
 
                     if let progress = viewModel.downloadProgress {
-                        ProgressView(value: progress.percent, total: 100)
-                            .progressViewStyle(.linear)
-
-                        Text(progress.displayText)
-                            .font(.caption).foregroundStyle(.secondary)
+                        if case .installing = progress.status {
+                            ProgressView(value: 100, total: 100)
+                                .progressViewStyle(.linear)
+                                .tint(.green)
+                            Text("다운로드 완료. 시뮬레이터에 설치 중입니다. 이 작업은 시간이 오래 소요될 수 있습니다.")
+                                .font(.caption).foregroundStyle(.secondary)
+                        } else {
+                            ProgressView(value: progress.percent, total: 100)
+                                .progressViewStyle(.linear)
+                            Text(progress.displayText)
+                                .font(.caption).foregroundStyle(.secondary)
+                        }
                     } else {
                         Text("준비 중...")
                             .font(.caption).foregroundStyle(.secondary)
