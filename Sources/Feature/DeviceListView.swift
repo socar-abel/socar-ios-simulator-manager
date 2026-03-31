@@ -157,8 +157,13 @@ public struct DeviceListView: View {
                 Text("\(viewModel.filteredAndSortedDevices.count)개")
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                Button("선택") { viewModel.isMultiSelectMode = true }
-                    .buttonStyle(.borderless).font(.caption)
+                Button {
+                    viewModel.isMultiSelectMode = true
+                } label: {
+                    Label("선택", systemImage: "checkmark.circle")
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
             }
         }
         .padding(.horizontal, 16)
