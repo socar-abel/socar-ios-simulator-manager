@@ -252,6 +252,7 @@ public struct DeviceListView: View {
                 Image(systemName: viewModel.isSelected(device) ? "checkmark.circle.fill" : "circle")
                     .foregroundStyle(viewModel.isSelected(device) ? .blue : .secondary)
                     .font(.title3)
+                    .padding(.leading, 16)
             }
             DeviceRowView(device: device, profile: viewModel.profile(for: device))
         }
