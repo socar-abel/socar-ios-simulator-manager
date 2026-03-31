@@ -102,7 +102,7 @@ struct OnboardingView: View {
                     .foregroundStyle(isDone ? .secondary : .primary)
                     .strikethrough(isDone)
                 Text(description)
-                    .font(.body).foregroundStyle(.secondary).
+                    .font(.body).foregroundStyle(.secondary)
             }
         }
     }

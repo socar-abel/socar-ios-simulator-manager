@@ -88,7 +88,19 @@ struct DVTDownloadableItem: Codable {
             }
         }
 
+        // iOS 시뮬레이터 major version이 16 미만이면 최신 Xcode에서 지원하지 않음
+        let majorVersion = Int(version.split(separator: ".").first ?? "0") ?? 0
+        if majorVersion > 0 && majorVersion < 16 {
+            return false
+        }
+
         return true
+    }
+
+    /// 주어진 SDK 최대 버전보다 높은 iOS 버전인지 확인
+    func isCompatibleWithSDK(maxMajor: Int) -> Bool {
+        let majorVersion = Int(version.split(separator: ".").first ?? "0") ?? 0
+        return majorVersion <= maxMajor
     }
 
     private func compareVersions(_ v1: String, _ v2: String) -> ComparisonResult {

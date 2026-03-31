@@ -268,8 +268,16 @@ public final class SimulatorRepository<Dependency: SimulatorRepositoryDependency
         try? FileManager.default.removeItem(at: tempJSON)
 
         let index = try JSONDecoder().decode(DVTDownloadableIndex.self, from: jsonData)
+
+        // 현재 Xcode의 iOS SDK major 버전 확인
+        let sdkMajor = await currentIOSSDKMajorVersion()
+
         return index.downloadables
-            .filter { $0.name.contains("iOS") && $0.isDownloadableOnCurrentMac }
+            .filter {
+                $0.name.contains("iOS")
+                && $0.isDownloadableOnCurrentMac
+                && (sdkMajor == 0 || $0.isCompatibleWithSDK(maxMajor: sdkMajor))
+            }
             .map { item in
                 DownloadableIOSVersion(
                     name: item.name,
@@ -313,17 +321,61 @@ public final class SimulatorRepository<Dependency: SimulatorRepositoryDependency
         if let buildVersion, !buildVersion.isEmpty {
             args += ["-buildVersion", buildVersion]
         }
+
+        let notAvailableDetected = UnsafeSendableBox(false)
+
         let result = try await dependency.shell.runWithProgress(
             executable: "/usr/bin/xcodebuild",
             arguments: args,
             timeout: 3600
         ) { line in
+            // "not available for download" 감지 시 즉시 에러
+            if line.contains("is not available for download") {
+                notAvailableDetected.value = true
+                return
+            }
             if let progress = DownloadProgress.parse(line: line) {
                 onProgress(progress)
             }
         }
+
+        if notAvailableDetected.value {
+            throw SimulatorRepositoryError.commandFailed(
+                "이 iOS 버전은 현재 설치된 Xcode에서 지원하지 않습니다. Xcode를 업데이트해주세요."
+            )
+        }
+
         guard result.isSuccess else {
-            throw SimulatorRepositoryError.commandFailed(result.stderr)
+            let stderr = result.stderr
+            if stderr.contains("is not available") {
+                throw SimulatorRepositoryError.commandFailed(
+                    "이 iOS 버전은 현재 설치된 Xcode에서 지원하지 않습니다. Xcode를 업데이트해주세요."
+                )
+            }
+            throw SimulatorRepositoryError.commandFailed(stderr)
+        }
+    }
+
+    /// Thread-safe wrapper for Sendable closure context
+    private final class UnsafeSendableBox<T>: @unchecked Sendable {
+        var value: T
+        init(_ value: T) { self.value = value }
+    }
+
+    // MARK: - SDK Version
+
+    /// 현재 Xcode의 iOS SDK major 버전 (예: Xcode 26.2 → 26)
+    private func currentIOSSDKMajorVersion() async -> Int {
+        do {
+            let result = try await dependency.shell.run(
+                executable: "/usr/bin/xcrun",
+                arguments: ["--sdk", "iphonesimulator", "--show-sdk-version"]
+            )
+            guard result.isSuccess else { return 0 }
+            let ver = result.stdout.trimmingCharacters(in: .whitespacesAndNewlines)
+            return Int(ver.split(separator: ".").first ?? "0") ?? 0
+        } catch {
+            return 0
         }
     }
 
