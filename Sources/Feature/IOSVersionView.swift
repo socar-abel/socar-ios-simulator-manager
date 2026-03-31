@@ -268,48 +268,6 @@ public struct IOSVersionView: View {
                 }
             }
 
-            if viewModel.isDownloading, let name = viewModel.downloadingVersionName {
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack(spacing: 8) {
-                        ProgressView().scaleEffect(0.8)
-                        if let progress = viewModel.downloadProgress,
-                           case .installing = progress.status {
-                            Text("\(name) 등록 중...")
-                                .font(.callout).fontWeight(.medium)
-                        } else {
-                            Text("\(name) 다운로드 중")
-                                .font(.callout).fontWeight(.medium)
-                        }
-                        Spacer()
-                        Button("취소") { viewModel.cancelDownload() }
-                            .buttonStyle(.bordered)
-                            .controlSize(.small)
-                    }
-
-                    if let progress = viewModel.downloadProgress {
-                        if case .installing = progress.status {
-                            ProgressView(value: 100, total: 100)
-                                .progressViewStyle(.linear)
-                                .tint(.green)
-                            Text("다운로드 완료. Mac에 등록 중입니다. 이 작업은 시간이 오래 소요될 수 있습니다.")
-                                .font(.caption).foregroundStyle(.secondary)
-                        } else {
-                            ProgressView(value: progress.percent, total: 100)
-                                .progressViewStyle(.linear)
-                            Text(progress.displayText)
-                                .font(.caption).foregroundStyle(.secondary)
-                        }
-                    } else {
-                        Text("준비 중...")
-                            .font(.caption).foregroundStyle(.secondary)
-                    }
-                }
-                .padding(12)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(.blue.opacity(0.05))
-                .clipShape(RoundedRectangle(cornerRadius: 8))
-            }
-
             if viewModel.downloadableLoadFailed && !viewModel.isLoadingDownloadable {
                 HStack(spacing: 8) {
                     Image(systemName: "wifi.slash").foregroundStyle(.orange)
@@ -337,31 +295,73 @@ public struct IOSVersionView: View {
     }
 
     private func downloadableRow(_ version: DownloadableIOSVersion) -> some View {
-        HStack(spacing: 12) {
-            Image(systemName: "arrow.down.circle")
-                .font(.title2)
-                .foregroundStyle(.secondary)
-                .frame(width: 28)
+        let isThisDownloading = viewModel.isDownloading && viewModel.downloadingVersionName == version.shortName
 
-            VStack(alignment: .leading, spacing: 2) {
-                Text(version.shortName).font(.body).fontWeight(.medium)
-                Text(version.displaySize).font(.caption).foregroundStyle(.secondary)
+        return VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 12) {
+                if isThisDownloading {
+                    ProgressView()
+                        .scaleEffect(0.8)
+                        .frame(width: 28)
+                } else {
+                    Image(systemName: "arrow.down.circle")
+                        .font(.title2)
+                        .foregroundStyle(.secondary)
+                        .frame(width: 28)
+                }
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(version.shortName).font(.body).fontWeight(.medium)
+                    if isThisDownloading {
+                        if let progress = viewModel.downloadProgress,
+                           case .installing = progress.status {
+                            Text("등록 중...").font(.caption).foregroundStyle(.orange)
+                        } else {
+                            Text("다운로드 중...").font(.caption).foregroundStyle(.blue)
+                        }
+                    } else {
+                        Text(version.displaySize).font(.caption).foregroundStyle(.secondary)
+                    }
+                }
+
+                Spacer()
+
+                if isThisDownloading {
+                    Button("취소") { viewModel.cancelDownload() }
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
+                } else {
+                    Button {
+                        versionToDownload = version
+                    } label: {
+                        Label("다운로드", systemImage: "arrow.down.to.line")
+                    }
+                    .buttonStyle(.bordered)
+                    .disabled(viewModel.isDownloading)
+                }
             }
 
-            Spacer()
-
-            if viewModel.isDownloading && viewModel.downloadingVersionName == version.shortName {
-                ProgressView()
-                    .scaleEffect(0.8)
-                    .frame(width: 80)
-            } else {
-                Button {
-                    versionToDownload = version
-                } label: {
-                    Label("다운로드", systemImage: "arrow.down.to.line")
+            // 진행률 바 (다운로드 중인 셀에만 표시)
+            if isThisDownloading {
+                if let progress = viewModel.downloadProgress {
+                    if case .installing = progress.status {
+                        ProgressView(value: 100, total: 100)
+                            .progressViewStyle(.linear)
+                            .tint(.green)
+                        Text("다운로드 완료. Mac에 등록 중입니다. 이 작업은 시간이 오래 소요될 수 있습니다.")
+                            .font(.caption).foregroundStyle(.secondary)
+                    } else {
+                        ProgressView(value: progress.percent, total: 100)
+                            .progressViewStyle(.linear)
+                        Text(progress.displayText)
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                } else {
+                    ProgressView(value: 0, total: 100)
+                        .progressViewStyle(.linear)
+                    Text("준비 중...")
+                        .font(.caption).foregroundStyle(.secondary)
                 }
-                .buttonStyle(.bordered)
-                .disabled(viewModel.isDownloading)
             }
         }
         .padding(10)
