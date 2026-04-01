@@ -39,7 +39,7 @@ public actor ShellService {
         let result = try await Self.execute(
             executable: "/usr/bin/which",
             arguments: ["xcrun"],
-            timeout: 5
+            timeout: AppConstants.Timeout.environmentShort
         )
         guard result.isSuccess,
               !result.stdout.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
@@ -51,7 +51,7 @@ public actor ShellService {
     public func run(
         executable: String,
         arguments: [String] = [],
-        timeout: TimeInterval = 30
+        timeout: TimeInterval = AppConstants.Timeout.shellDefault
     ) async throws -> CommandResult {
         try await Self.execute(executable: executable, arguments: arguments, timeout: timeout)
     }
@@ -68,25 +68,15 @@ public actor ShellService {
     public func runWithProgress(
         executable: String,
         arguments: [String] = [],
-        timeout: TimeInterval = 3600,
+        timeout: TimeInterval = AppConstants.Timeout.download,
         onOutputLine: @Sendable @escaping (String) -> Void
     ) async throws -> CommandResult {
         logger.debug("실행(progress): \(executable) \(arguments.joined(separator: " "))")
 
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: executable)
-        process.arguments = arguments
-
-        let stdoutPipe = Pipe()
-        let stderrPipe = Pipe()
-        process.standardOutput = stdoutPipe
-        process.standardError = stderrPipe
-
-        var env = ProcessInfo.processInfo.environment
-        let extraPaths = ["/usr/bin", "/usr/local/bin", "/opt/homebrew/bin"]
-        let currentPath = env["PATH"] ?? ""
-        env["PATH"] = (extraPaths + [currentPath]).joined(separator: ":")
-        process.environment = env
+        let (process, stdoutPipe, stderrPipe) = Self.configureProcess(
+            executable: executable,
+            arguments: arguments
+        )
 
         return try await withThrowingTaskGroup(of: CommandResult?.self) { group in
             group.addTask {
@@ -158,15 +148,12 @@ public actor ShellService {
         }
     }
 
-    // MARK: - Static
+    // MARK: - Process Configuration
 
-    public static func execute(
+    private static func configureProcess(
         executable: String,
-        arguments: [String],
-        timeout: TimeInterval
-    ) async throws -> CommandResult {
-        logger.debug("실행: \(executable) \(arguments.joined(separator: " "))")
-
+        arguments: [String]
+    ) -> (Process, Pipe, Pipe) {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: executable)
         process.arguments = arguments
@@ -181,6 +168,23 @@ public actor ShellService {
         let currentPath = env["PATH"] ?? ""
         env["PATH"] = (extraPaths + [currentPath]).joined(separator: ":")
         process.environment = env
+
+        return (process, stdoutPipe, stderrPipe)
+    }
+
+    // MARK: - Static
+
+    public static func execute(
+        executable: String,
+        arguments: [String],
+        timeout: TimeInterval
+    ) async throws -> CommandResult {
+        logger.debug("실행: \(executable) \(arguments.joined(separator: " "))")
+
+        let (process, stdoutPipe, stderrPipe) = configureProcess(
+            executable: executable,
+            arguments: arguments
+        )
 
         return try await withThrowingTaskGroup(of: CommandResult?.self) { group in
             group.addTask {

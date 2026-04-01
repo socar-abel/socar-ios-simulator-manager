@@ -6,7 +6,7 @@ import Feature
 
 struct RootView: View {
 
-    @State var coordinator: AppCoordinator
+    @State var coordinator: AppContainer
 
     var body: some View {
         Group {

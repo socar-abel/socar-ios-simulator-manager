@@ -6,7 +6,7 @@ import Feature
 
 struct MainView: View {
 
-    @Bindable var coordinator: AppCoordinator
+    @Bindable var coordinator: AppContainer
 
     var body: some View {
         NavigationSplitView {

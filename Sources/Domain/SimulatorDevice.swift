@@ -6,7 +6,7 @@ public struct SimulatorDevice: Identifiable, Hashable, Sendable {
     public let state: String
     public let isAvailable: Bool
     public let deviceTypeIdentifier: String?
-    public var runtimeIdentifier: String?
+    public let runtimeIdentifier: String?
 
     public var id: String { udid }
     public var compositeId: String { "\(udid)-\(state)" }

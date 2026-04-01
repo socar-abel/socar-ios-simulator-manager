@@ -7,13 +7,13 @@ import Feature
 @main
 struct SOCARSimulatorManagerApp: App {
 
-    @State private var coordinator: AppCoordinator
+    @State private var coordinator: AppContainer
 
     init() {
         NSApplication.shared.setActivationPolicy(.regular)
         Self.setAppIcon()
         let assembly = AppAssembly()
-        _coordinator = State(initialValue: AppCoordinator(assembly: assembly))
+        _coordinator = State(initialValue: AppContainer(assembly: assembly))
     }
 
     private static func setAppIcon() {

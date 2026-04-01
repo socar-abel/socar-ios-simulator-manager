@@ -253,7 +253,7 @@ struct AppListPickerSheet: View {
     @State private var installError: String?
 
     private var localApps: [URL] {
-        buildListViewModel.localApps()
+        buildListViewModel.localAppsList
     }
 
     var body: some View {

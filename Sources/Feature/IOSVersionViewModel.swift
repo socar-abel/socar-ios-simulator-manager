@@ -1,4 +1,5 @@
 import Foundation
+import Core
 import Domain
 
 @MainActor
@@ -82,10 +83,10 @@ public final class IOSVersionViewModel {
 
         do {
             try await useCase.deleteIOSVersion(identifier: version.identifier)
-            // 실제 삭제 완료까지 폴링 (최대 60초)
+            // 실제 삭제 완료까지 폴링
             var deleted = false
-            for _ in 0..<30 {
-                try? await Task.sleep(for: .seconds(2))
+            for _ in 0..<AppConstants.Polling.iosVersionDeleteMaxAttempts {
+                try? await Task.sleep(for: .seconds(AppConstants.Polling.iosVersionDeleteIntervalSeconds))
                 await silentRefresh()
                 if !installedIOSVersions.contains(where: { $0.identifier == version.identifier }) {
                     deleted = true
@@ -210,9 +211,9 @@ public final class IOSVersionViewModel {
         // 이미 폴링 중이면 무시
         guard pollingTask == nil else { return }
         pollingTask = Task { [weak self] in
-            // 최대 5분간 5초 간격으로 폴링
-            for _ in 0..<60 {
-                try? await Task.sleep(for: .seconds(5))
+            // 최대 폴링
+            for _ in 0..<AppConstants.Polling.unusableMaxAttempts {
+                try? await Task.sleep(for: .seconds(AppConstants.Polling.unusableIntervalSeconds))
                 guard !Task.isCancelled else { return }
                 await self?.silentRefresh()
                 // 모두 Ready가 되면 종료

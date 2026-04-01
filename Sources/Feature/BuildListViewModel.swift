@@ -8,6 +8,7 @@ public final class BuildListViewModel {
 
     public private(set) var isAdding = false
     public private(set) var isDeleting = false
+    public private(set) var localAppsList: [URL] = []
     public var errorMessage: String?
     public var successMessage: String?
 
@@ -20,12 +21,13 @@ public final class BuildListViewModel {
     ) {
         self.buildUseCase = buildUseCase
         self.simulatorUseCase = simulatorUseCase
+        refreshLocalAppsList()
     }
 
     // MARK: - Input
 
-    public func localApps() -> [URL] {
-        buildUseCase.listLocalApps()
+    public func refreshLocalAppsList() {
+        localAppsList = buildUseCase.listLocalApps()
     }
 
     public func addBuild(from url: URL) async {
@@ -39,6 +41,7 @@ public final class BuildListViewModel {
         } catch {
             errorMessage = error.localizedDescription
         }
+        refreshLocalAppsList()
     }
 
     public func deleteBuild(at path: URL) {
@@ -52,6 +55,7 @@ public final class BuildListViewModel {
         } catch {
             errorMessage = error.localizedDescription
         }
+        refreshLocalAppsList()
     }
 
     public func installOnDevice(appURL: URL, udid: String) async throws {
@@ -74,6 +78,18 @@ public final class BuildListViewModel {
 // MARK: - App Bundle Info
 
 public struct AppBundleInfo {
+
+    private enum PlistKey {
+        static let bundleIdentifier = "CFBundleIdentifier"
+        static let shortVersionString = "CFBundleShortVersionString"
+        static let bundleVersion = "CFBundleVersion"
+        static let displayName = "CFBundleDisplayName"
+        static let bundleName = "CFBundleName"
+        static let bundleIcons = "CFBundleIcons"
+        static let primaryIcon = "CFBundlePrimaryIcon"
+        static let iconFiles = "CFBundleIconFiles"
+    }
+
     public let appURL: URL
     private let cachedPlist: [String: Any]?
 
@@ -91,26 +107,26 @@ public struct AppBundleInfo {
     }
 
     public var bundleId: String? {
-        cachedPlist?["CFBundleIdentifier"] as? String
+        cachedPlist?[PlistKey.bundleIdentifier] as? String
     }
 
     public var version: String? {
-        cachedPlist?["CFBundleShortVersionString"] as? String
+        cachedPlist?[PlistKey.shortVersionString] as? String
     }
 
     public var buildNumber: String? {
-        cachedPlist?["CFBundleVersion"] as? String
+        cachedPlist?[PlistKey.bundleVersion] as? String
     }
 
     public var displayName: String? {
-        cachedPlist?["CFBundleDisplayName"] as? String ?? cachedPlist?["CFBundleName"] as? String
+        cachedPlist?[PlistKey.displayName] as? String ?? cachedPlist?[PlistKey.bundleName] as? String
     }
 
-    /// Info.plist의 CFBundleIcons → CFBundlePrimaryIcon → CFBundleIconFiles에서 아이콘 파일명을 찾아 .app 내 실제 PNG 로드
+    /// Info.plist의 CFBundleIcons -> CFBundlePrimaryIcon -> CFBundleIconFiles에서 아이콘 파일명을 찾아 .app 내 실제 PNG 로드
     public var iconImage: NSImage? {
-        guard let icons = cachedPlist?["CFBundleIcons"] as? [String: Any],
-              let primaryIcon = icons["CFBundlePrimaryIcon"] as? [String: Any],
-              let iconFiles = primaryIcon["CFBundleIconFiles"] as? [String],
+        guard let icons = cachedPlist?[PlistKey.bundleIcons] as? [String: Any],
+              let primaryIcon = icons[PlistKey.primaryIcon] as? [String: Any],
+              let iconFiles = primaryIcon[PlistKey.iconFiles] as? [String],
               let iconName = iconFiles.first else { return nil }
 
         // 60x60@2x를 우선 찾고, 없으면 이름 매칭

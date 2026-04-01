@@ -1,4 +1,5 @@
 import Foundation
+import Core
 import Domain
 
 @MainActor
@@ -25,41 +26,12 @@ public final class DeviceListViewModel {
     public var notchFilter: NotchFilter = .all
 
     public var filteredAndSortedDevices: [SimulatorDevice] {
-        var result = devices
-
-        // 필터
-        switch notchFilter {
-        case .all: break
-        case .notchOnly:
-            result = result.filter { profile(for: $0)?.hasNotch == true }
-        case .noNotchOnly:
-            result = result.filter { profile(for: $0)?.hasNotch == false }
-        }
-
-        // 정렬
-        result.sort { a, b in
-            switch sortOption {
-            case .nameAsc:
-                return a.name.localizedStandardCompare(b.name) == .orderedAscending
-            case .nameDesc:
-                return a.name.localizedStandardCompare(b.name) == .orderedDescending
-            case .runtimeNewest:
-                return (a.runtimeIdentifier ?? "") > (b.runtimeIdentifier ?? "")
-            case .runtimeOldest:
-                return (a.runtimeIdentifier ?? "") < (b.runtimeIdentifier ?? "")
-            case .screenWidthRatioAsc:
-                let ra = profile(for: a)?.widthRatio
-                let rb = profile(for: b)?.widthRatio
-                if ra == nil && rb == nil { return a.name.localizedStandardCompare(b.name) == .orderedAscending }
-                return (ra ?? .greatestFiniteMagnitude) < (rb ?? .greatestFiniteMagnitude)
-            case .screenWidthRatioDesc:
-                let ra = profile(for: a)?.widthRatio
-                let rb = profile(for: b)?.widthRatio
-                if ra == nil && rb == nil { return a.name.localizedStandardCompare(b.name) == .orderedDescending }
-                return (ra ?? 0) > (rb ?? 0)
-            }
-        }
-        return result
+        DeviceSorter.sort(
+            devices: devices,
+            profiles: deviceProfiles,
+            option: sortOption,
+            filter: notchFilter
+        )
     }
 
     public func profile(for device: SimulatorDevice) -> DeviceTypeProfile? {
@@ -158,14 +130,14 @@ public final class DeviceListViewModel {
         }
     }
 
-    /// 상태가 반영될 때까지 최대 10회 폴링 (5초)
+    /// 상태가 반영될 때까지 최대 폴링
     private func refreshUntilState(udid: String, expectedState: String) async {
-        for _ in 0..<10 {
+        for _ in 0..<AppConstants.Polling.deviceStateMaxAttempts {
             await refreshAll()
             if devices.first(where: { $0.udid == udid })?.state == expectedState {
                 return
             }
-            try? await Task.sleep(for: .milliseconds(500))
+            try? await Task.sleep(for: .milliseconds(AppConstants.Polling.deviceStateIntervalMs))
         }
         // 폴링 실패 시에도 한 번 더 새로고침
         await refreshAll()
@@ -281,19 +253,3 @@ public final class DeviceListViewModel {
     }
 }
 
-// MARK: - Sort & Filter Enums
-
-public enum DeviceSortOption: String, CaseIterable {
-    case nameAsc = "이름순"
-    case nameDesc = "이름 역순"
-    case runtimeNewest = "iOS 최신순"
-    case runtimeOldest = "iOS 오래된순"
-    case screenWidthRatioAsc = "width 비율 좁은순"
-    case screenWidthRatioDesc = "width 비율 넓은순"
-}
-
-public enum NotchFilter: String, CaseIterable {
-    case all = "전체"
-    case notchOnly = "노치/다이나믹 아일랜드"
-    case noNotchOnly = "노치 없음"
-}

@@ -15,10 +15,17 @@ public final class FileRepository: FileRepositoryInterface {
         buildsDirectory = appSupport
             .appendingPathComponent("SOCARSimulatorManager")
             .appendingPathComponent("Builds")
-        try? FileManager.default.createDirectory(at: buildsDirectory, withIntermediateDirectories: true)
+        ensureBuildsDirectoryExists()
+    }
+
+    private func ensureBuildsDirectoryExists() {
+        if !FileManager.default.fileExists(atPath: buildsDirectory.path) {
+            try? FileManager.default.createDirectory(at: buildsDirectory, withIntermediateDirectories: true)
+        }
     }
 
     public func extractZIP(at source: URL) async throws -> URL {
+        ensureBuildsDirectoryExists()
         let extractDir = buildsDirectory.appendingPathComponent(
             source.deletingPathExtension().lastPathComponent
         )
@@ -55,10 +62,7 @@ public final class FileRepository: FileRepositoryInterface {
     }
 
     public func listLocalApps() -> [URL] {
-        // 디렉토리가 삭제된 경우 재생성
-        if !FileManager.default.fileExists(atPath: buildsDirectory.path) {
-            try? FileManager.default.createDirectory(at: buildsDirectory, withIntermediateDirectories: true)
-        }
+        ensureBuildsDirectoryExists()
         guard let enumerator = FileManager.default.enumerator(
             at: buildsDirectory,
             includingPropertiesForKeys: [.isDirectoryKey],
@@ -89,10 +93,7 @@ public final class FileRepository: FileRepositoryInterface {
     }
 
     public func copyToBuildDirectory(from source: URL) throws -> URL {
-        // 디렉토리가 삭제된 경우 재생성
-        if !FileManager.default.fileExists(atPath: buildsDirectory.path) {
-            try FileManager.default.createDirectory(at: buildsDirectory, withIntermediateDirectories: true)
-        }
+        ensureBuildsDirectoryExists()
         let destination = buildsDirectory.appendingPathComponent(source.lastPathComponent)
         if FileManager.default.fileExists(atPath: destination.path) {
             try FileManager.default.removeItem(at: destination)

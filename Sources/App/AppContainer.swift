@@ -13,7 +13,7 @@ enum AppRoute: Hashable {
 
 @Observable
 @MainActor
-final class AppCoordinator {
+final class AppContainer {
 
     var childCoordinators: [any Coordinator] = []
 

@@ -3,7 +3,7 @@ import Core
 import Domain
 
 public protocol SimulatorRepositoryDependency {
-    var shell: ShellService { get }
+    var shell: any ShellServiceInterface { get }
 }
 
 public final class SimulatorRepository<Dependency: SimulatorRepositoryDependency>: SimulatorRepositoryInterface {
@@ -323,7 +323,7 @@ public final class SimulatorRepository<Dependency: SimulatorRepositoryDependency
         let result = try await dependency.shell.run(
             executable: "/usr/bin/xcodebuild",
             arguments: args,
-            timeout: 3600
+            timeout: AppConstants.Timeout.download
         )
         guard result.isSuccess else {
             throw SimulatorRepositoryError.commandFailed(result.stderr)
@@ -345,7 +345,7 @@ public final class SimulatorRepository<Dependency: SimulatorRepositoryDependency
         let result = try await dependency.shell.runWithProgress(
             executable: "/usr/bin/xcodebuild",
             arguments: args,
-            timeout: 3600
+            timeout: AppConstants.Timeout.download
         ) { line in
             // "not available for download" 감지 시 즉시 에러
             if line.contains("is not available for download") {

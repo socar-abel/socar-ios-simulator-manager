@@ -9,7 +9,6 @@ public struct BuildListView: View {
     @State private var showFilePicker = false
     @State private var appToInstall: IdentifiableURL?
     @State private var isDropTargeted = false
-    @State private var refreshId = UUID()
 
     public init(viewModel: BuildListViewModel) {
         self.viewModel = viewModel
@@ -25,27 +24,12 @@ public struct BuildListView: View {
             }
             .padding(24)
         }
-        .overlay(alignment: .bottom) {
-            VStack(spacing: 8) {
-                if let error = viewModel.errorMessage {
-                    ErrorBanner(message: error) { viewModel.dismissError() }
-                        .padding(.horizontal, 16)
-                }
-                if let success = viewModel.successMessage {
-                    successBanner(success)
-                        .padding(.horizontal, 16)
-                        .onAppear {
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
-                                withAnimation { viewModel.dismissSuccess() }
-                            }
-                        }
-                }
-            }
-            .padding(.bottom, 12)
-            .transition(.move(edge: .bottom).combined(with: .opacity))
-        }
-        .animation(.easeInOut(duration: 0.25), value: viewModel.successMessage)
-        .animation(.easeInOut(duration: 0.25), value: viewModel.errorMessage)
+        .toastOverlay(
+            errorMessage: $viewModel.errorMessage,
+            successMessage: $viewModel.successMessage,
+            onDismissError: { viewModel.dismissError() },
+            onDismissSuccess: { viewModel.dismissSuccess() }
+        )
         .onDrop(of: [.fileURL], isTargeted: $isDropTargeted) { providers in
             handleDrop(providers)
         }
@@ -61,7 +45,7 @@ public struct BuildListView: View {
         ) { result in
             if case .success(let urls) = result {
                 for url in urls {
-                    Task { await viewModel.addBuild(from: url) ; refreshId = UUID() }
+                    Task { await viewModel.addBuild(from: url) }
                 }
             }
         }
@@ -114,7 +98,7 @@ public struct BuildListView: View {
 
     private var googleDriveSection: some View {
         Button {
-            if let url = URL(string: "https://drive.google.com/drive/folders/1GC85ktjO9OInB5IEVf7Wzd3laLuTegTs") {
+            if let url = URL(string: AppConstants.googleDriveURL) {
                 NSWorkspace.shared.open(url)
             }
         } label: {
@@ -145,7 +129,7 @@ public struct BuildListView: View {
     // MARK: - Build List
 
     private var buildList: some View {
-        let apps = viewModel.localApps()
+        let apps = viewModel.localAppsList
         return Group {
             if apps.isEmpty {
                 VStack(spacing: 12) {
@@ -167,7 +151,6 @@ public struct BuildListView: View {
                 }
             }
         }
-        .id(refreshId)
     }
 
     private func buildRow(_ appURL: URL) -> some View {
@@ -219,7 +202,6 @@ public struct BuildListView: View {
 
             Button {
                 viewModel.deleteBuild(at: appURL)
-                refreshId = UUID()
             } label: {
                 Image(systemName: "trash").foregroundStyle(.red)
             }
@@ -259,26 +241,12 @@ public struct BuildListView: View {
                 guard ext == "app" || ext == "zip" else { return }
                 Task { @MainActor in
                     await viewModel.addBuild(from: url)
-                    refreshId = UUID()
                 }
             }
         }
         return true
     }
 
-    // MARK: - Banners
-
-    private func successBanner(_ message: String) -> some View {
-        HStack {
-            Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
-            Text(message).font(.callout)
-            Spacer()
-            Button("닫기") { viewModel.dismissSuccess() }.buttonStyle(.borderless)
-        }
-        .padding(12)
-        .background(.green.opacity(0.9))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
-    }
 }
 
 // MARK: - Install Target Sheet

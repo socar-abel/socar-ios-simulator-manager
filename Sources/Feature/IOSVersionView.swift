@@ -52,27 +52,12 @@ public struct IOSVersionView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 16))
             }
         }
-        .overlay(alignment: .bottom) {
-            VStack(spacing: 8) {
-                if let error = viewModel.errorMessage {
-                    ErrorBanner(message: error) { viewModel.dismissError() }
-                        .padding(.horizontal, 16)
-                }
-                if let success = viewModel.successMessage {
-                    successBanner(success)
-                        .padding(.horizontal, 16)
-                        .transition(.move(edge: .bottom).combined(with: .opacity))
-                        .onAppear {
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
-                                withAnimation { viewModel.dismissSuccess() }
-                            }
-                        }
-                }
-            }
-            .padding(.bottom, 24)
-        }
-        .animation(.easeInOut(duration: 0.25), value: viewModel.successMessage)
-        .animation(.easeInOut(duration: 0.25), value: viewModel.errorMessage)
+        .toastOverlay(
+            errorMessage: $viewModel.errorMessage,
+            successMessage: $viewModel.successMessage,
+            onDismissError: { viewModel.dismissError() },
+            onDismissSuccess: { viewModel.dismissSuccess() }
+        )
         .task { await viewModel.onAppear() }
         .confirmationDialog(
             "iOS 버전을 삭제하시겠습니까?",
@@ -401,17 +386,4 @@ public struct IOSVersionView: View {
         }
     }
 
-    // MARK: - Banners
-
-    private func successBanner(_ message: String) -> some View {
-        HStack {
-            Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
-            Text(message).font(.callout)
-            Spacer()
-            Button("닫기") { viewModel.dismissSuccess() }.buttonStyle(.borderless)
-        }
-        .padding(12)
-        .background(.green.opacity(0.9))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
-    }
 }
