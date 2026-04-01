@@ -273,7 +273,11 @@ public struct DeviceListView: View {
             if viewModel.isMultiSelectMode {
                 viewModel.toggleSelection(device)
             } else {
-                viewModel.selectedDevice = device
+                if viewModel.selectedDevice?.udid == device.udid {
+                    viewModel.selectedDevice = nil
+                } else {
+                    viewModel.selectedDevice = device
+                }
             }
         }
     }
