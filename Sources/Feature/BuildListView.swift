@@ -17,9 +17,9 @@ public struct BuildListView: View {
     public var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
-                header
                 guideBanner
                 googleDriveSection
+                header
                 buildList
             }
             .padding(24)
