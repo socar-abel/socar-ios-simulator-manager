@@ -95,12 +95,12 @@ public struct BuildListView: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 6) {
                 Image(systemName: "info.circle.fill").foregroundStyle(.blue)
-                Text("이 탭은 시뮬레이터에 설치할 앱 목록을 관리합니다.")
+                Text("이곳에서 시뮬레이터에 설치할 앱 목록을 관리합니다.")
                     .font(.callout).fontWeight(.medium)
             }
             VStack(alignment: .leading, spacing: 4) {
-                Text("• .app 확장자의 파일만 설치 가능합니다. (.zip도 지원)")
-                Text("• Google Drive에 모든 SOCAR Debug 앱 버전이 업로드되고 있습니다. (RC)")
+                Text("• .app 확장자의 파일만 설치 가능합니다.")
+                Text("• Google Drive에 모든 SOCAR Debug 앱 버전이 업로드되고 있습니다. (RC 버전)")
                 Text("• FC 앱 버전이 필요한 경우 iOS 개발자에게 문의해주세요.")
                 Text("• 아래 Google Drive 버튼에서 다운로드한 후 '파일 추가' 또는 드래그하세요.")
             }
