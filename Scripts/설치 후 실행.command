@@ -22,28 +22,15 @@ fi
 
 # 2. Xcode 설치 여부 확인
 if ! xcode-select -p &>/dev/null; then
+    MAC_VERSION=$(sw_vers -productVersion)
     echo "⚠️  Xcode가 설치되어 있지 않습니다."
     echo ""
     echo "이 앱을 사용하려면 Xcode가 필요합니다."
-    echo "설치 방법을 선택해주세요:"
+    echo "현재 macOS 버전: $MAC_VERSION"
     echo ""
-    echo "  1) App Store에서 설치 (최신 버전)"
-    echo "  2) 내 macOS에 호환되는 버전 직접 선택 (xcodereleases.com)"
-    echo ""
-    read -p "선택 (1 또는 2): " choice
-    case "$choice" in
-        2)
-            echo ""
-            echo "🌐 xcodereleases.com을 열고 있습니다..."
-            echo "   내 macOS 버전에 맞는 Xcode를 찾아서 다운로드해주세요."
-            open "https://xcodereleases.com"
-            ;;
-        *)
-            echo ""
-            echo "📱 App Store를 열고 있습니다..."
-            open "macappstore://apps.apple.com/app/xcode/id497799835"
-            ;;
-    esac
+    echo "🌐 내 macOS에 호환되는 Xcode를 설치할 수 있는 사이트를 열고 있습니다..."
+    echo "   macOS $MAC_VERSION 에 호환되는 버전을 찾아서 다운로드해주세요."
+    open "https://xcodereleases.com"
     echo ""
     echo "Xcode 설치 완료 후 Xcode를 한 번 실행한 다음, 이 스크립트를 다시 실행해주세요."
     echo ""
