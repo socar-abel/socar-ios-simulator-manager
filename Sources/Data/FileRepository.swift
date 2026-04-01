@@ -10,7 +10,8 @@ public final class FileRepository: FileRepositoryInterface {
         let appSupport = FileManager.default.urls(
             for: .applicationSupportDirectory,
             in: .userDomainMask
-        ).first!
+        ).first ?? URL(fileURLWithPath: NSTemporaryDirectory())
+            .appendingPathComponent("SOCARSimulatorManager")
         buildsDirectory = appSupport
             .appendingPathComponent("SOCARSimulatorManager")
             .appendingPathComponent("Builds")
@@ -33,6 +34,11 @@ public final class FileRepository: FileRepositoryInterface {
         process.standardOutput = FileHandle.nullDevice
         let stderrPipe = Pipe()
         process.standardError = stderrPipe
+
+        defer {
+            try? stderrPipe.fileHandleForReading.close()
+            try? stderrPipe.fileHandleForWriting.close()
+        }
 
         try process.run()
         process.waitUntilExit()

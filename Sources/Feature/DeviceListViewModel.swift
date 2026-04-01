@@ -1,6 +1,7 @@
 import Foundation
 import Domain
 
+@MainActor
 @Observable
 public final class DeviceListViewModel {
 

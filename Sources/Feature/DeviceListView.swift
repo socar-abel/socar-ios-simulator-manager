@@ -197,12 +197,23 @@ public struct DeviceListView: View {
             sortFilterBar
             Divider()
             ScrollView {
+                let sorted = viewModel.filteredAndSortedDevices
+                let grouped: (booted: [SimulatorDevice], shutdown: [SimulatorDevice], other: [SimulatorDevice]) = {
+                    var booted: [SimulatorDevice] = []
+                    var shutdown: [SimulatorDevice] = []
+                    var other: [SimulatorDevice] = []
+                    for device in sorted {
+                        if device.isBooted { booted.append(device) }
+                        else if device.isShutdown { shutdown.append(device) }
+                        else { other.append(device) }
+                    }
+                    return (booted, shutdown, other)
+                }()
+
                 LazyVStack(spacing: 0, pinnedViews: .sectionHeaders) {
-                    let sorted = viewModel.filteredAndSortedDevices
-                    let booted = sorted.filter(\.isBooted)
-                    if !booted.isEmpty {
+                    if !grouped.booted.isEmpty {
                         Section {
-                            ForEach(booted, id: \SimulatorDevice.compositeId) { device in
+                            ForEach(grouped.booted, id: \SimulatorDevice.compositeId) { device in
                                 deviceRow(device)
                                 Divider().padding(.leading, 40)
                             }
@@ -210,10 +221,9 @@ public struct DeviceListView: View {
                             sectionHeader("실행중")
                         }
                     }
-                    let shutdown = sorted.filter(\.isShutdown)
-                    if !shutdown.isEmpty {
+                    if !grouped.shutdown.isEmpty {
                         Section {
-                            ForEach(shutdown, id: \SimulatorDevice.compositeId) { device in
+                            ForEach(grouped.shutdown, id: \SimulatorDevice.compositeId) { device in
                                 deviceRow(device)
                                 Divider().padding(.leading, 40)
                             }
@@ -221,10 +231,9 @@ public struct DeviceListView: View {
                             sectionHeader("종료됨")
                         }
                     }
-                    let other = sorted.filter { !$0.isBooted && !$0.isShutdown }
-                    if !other.isEmpty {
+                    if !grouped.other.isEmpty {
                         Section {
-                            ForEach(other, id: \SimulatorDevice.compositeId) { device in
+                            ForEach(grouped.other, id: \SimulatorDevice.compositeId) { device in
                                 deviceRow(device)
                                 Divider().padding(.leading, 40)
                             }

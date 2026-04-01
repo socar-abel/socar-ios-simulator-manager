@@ -2,6 +2,7 @@ import Foundation
 import AppKit
 import Domain
 
+@MainActor
 @Observable
 public final class BuildListViewModel {
 
@@ -74,8 +75,14 @@ public final class BuildListViewModel {
 
 public struct AppBundleInfo {
     public let appURL: URL
+    private let cachedPlist: [String: Any]?
 
-    private var plist: [String: Any]? {
+    public init(appURL: URL) {
+        self.appURL = appURL
+        self.cachedPlist = Self.loadPlist(from: appURL)
+    }
+
+    private static func loadPlist(from appURL: URL) -> [String: Any]? {
         let plistURL = appURL.appendingPathComponent("Info.plist")
         guard let data = try? Data(contentsOf: plistURL),
               let dict = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any]
@@ -84,24 +91,24 @@ public struct AppBundleInfo {
     }
 
     public var bundleId: String? {
-        plist?["CFBundleIdentifier"] as? String
+        cachedPlist?["CFBundleIdentifier"] as? String
     }
 
     public var version: String? {
-        plist?["CFBundleShortVersionString"] as? String
+        cachedPlist?["CFBundleShortVersionString"] as? String
     }
 
     public var buildNumber: String? {
-        plist?["CFBundleVersion"] as? String
+        cachedPlist?["CFBundleVersion"] as? String
     }
 
     public var displayName: String? {
-        plist?["CFBundleDisplayName"] as? String ?? plist?["CFBundleName"] as? String
+        cachedPlist?["CFBundleDisplayName"] as? String ?? cachedPlist?["CFBundleName"] as? String
     }
 
     /// Info.plist의 CFBundleIcons → CFBundlePrimaryIcon → CFBundleIconFiles에서 아이콘 파일명을 찾아 .app 내 실제 PNG 로드
     public var iconImage: NSImage? {
-        guard let icons = plist?["CFBundleIcons"] as? [String: Any],
+        guard let icons = cachedPlist?["CFBundleIcons"] as? [String: Any],
               let primaryIcon = icons["CFBundlePrimaryIcon"] as? [String: Any],
               let iconFiles = primaryIcon["CFBundleIconFiles"] as? [String],
               let iconName = iconFiles.first else { return nil }

@@ -1,6 +1,7 @@
 import Foundation
 import Domain
 
+@MainActor
 @Observable
 public final class IOSVersionViewModel {
 
@@ -36,16 +37,17 @@ public final class IOSVersionViewModel {
     public func refreshAll() async {
         isLoading = true
         defer { isLoading = false }
-        await silentRefresh()
+        await silentRefresh(includeDiskUsage: true)
     }
 
     /// 로딩 표시 없이 데이터만 갱신 (폴링용)
-    private func silentRefresh() async {
+    /// - Parameter includeDiskUsage: true이면 디스크 사용량도 함께 갱신 (기본 false, 폴링 시 불필요한 디스크 조회 생략)
+    private func silentRefresh(includeDiskUsage: Bool = false) async {
         do {
-            async let versions = useCase.fetchInstalledIOSVersions()
-            async let disk = useCase.fetchDiskUsage()
-            installedIOSVersions = try await versions
-            diskUsage = try await disk
+            installedIOSVersions = try await useCase.fetchInstalledIOSVersions()
+            if includeDiskUsage {
+                diskUsage = try await useCase.fetchDiskUsage()
+            }
             // 등록 중(Unusable) 상태가 있으면 자동 폴링 시작
             startPollingIfNeeded()
         } catch {
@@ -155,8 +157,8 @@ public final class IOSVersionViewModel {
                 downloadingVersionName = nil
                 downloadProgress = nil
                 successMessage = "\(version.shortName) 다운로드가 완료되었습니다."
-                // 백그라운드에서 목록 갱신
-                await silentRefresh()
+                // 백그라운드에서 목록 갱신 (다운로드 완료 후 디스크 사용량도 갱신)
+                await silentRefresh(includeDiskUsage: true)
                 await loadDownloadableVersions()
             } catch {
                 if !Task.isCancelled {
