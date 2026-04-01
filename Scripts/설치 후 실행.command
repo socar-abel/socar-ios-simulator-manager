@@ -28,6 +28,8 @@ if ! xcode-select -p &>/dev/null; then
     echo "이 앱을 사용하려면 Xcode가 필요합니다."
     echo "현재 macOS 버전: $MAC_VERSION"
     echo ""
+    echo "설치 후 Xcode를 한 번 실행해서 라이선스 동의를 완료한 다음, 이 스크립트를 다시 실행해주세요."
+    echo ""
     echo "Xcode 설치 페이지로 이동하시겠습니까?"
     echo "  1) 예 - 내 macOS에 호환되는 Xcode를 설치합니다"
     echo "  2) 아니오 - 나중에 설치합니다"
@@ -39,8 +41,6 @@ if ! xcode-select -p &>/dev/null; then
         echo "   macOS $MAC_VERSION 에 호환되는 버전을 찾아서 다운로드해주세요."
         open "https://xcodereleases.com"
     fi
-    echo ""
-    echo "Xcode 설치 완료 후 Xcode를 한 번 실행한 다음, 이 스크립트를 다시 실행해주세요."
     echo ""
     read -p "아무 키나 누르면 종료합니다..."
     exit 0
