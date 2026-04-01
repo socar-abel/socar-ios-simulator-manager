@@ -221,6 +221,24 @@ public final class SimulatorRepository<Dependency: SimulatorRepositoryDependency
         )
     }
 
+    // MARK: - Location
+
+    public func setLocation(udid: String, latitude: Double, longitude: Double) async throws {
+        let result = try await dependency.shell.simctlArgs(
+            ["location", udid, "set", "\(latitude),\(longitude)"]
+        )
+        guard result.isSuccess else {
+            throw SimulatorRepositoryError.commandFailed(result.stderr)
+        }
+    }
+
+    public func clearLocation(udid: String) async throws {
+        let result = try await dependency.shell.simctlArgs(["location", udid, "clear"])
+        guard result.isSuccess else {
+            throw SimulatorRepositoryError.commandFailed(result.stderr)
+        }
+    }
+
     // MARK: - Runtime Management
 
     public func listInstalledIOSVersions() async throws -> [InstalledIOSVersion] {

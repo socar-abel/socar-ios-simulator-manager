@@ -158,6 +158,28 @@ public final class DeviceListViewModel {
         }
     }
 
+    // MARK: - Location
+
+    public func setLocation(udid: String, latitude: Double, longitude: Double) async {
+        errorMessage = nil
+        do {
+            try await useCase.setLocation(udid: udid, latitude: latitude, longitude: longitude)
+            successMessage = "위치가 설정되었습니다."
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    public func clearLocation(udid: String) async {
+        errorMessage = nil
+        do {
+            try await useCase.clearLocation(udid: udid)
+            successMessage = "위치가 초기화되었습니다."
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
     public func delete(udid: String) async {
         let deviceName = devices.first { $0.udid == udid }?.name ?? "디바이스"
         isDeleting = true

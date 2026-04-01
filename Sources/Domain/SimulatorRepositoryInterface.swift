@@ -31,6 +31,10 @@ public protocol SimulatorRepositoryInterface: Sendable {
         onProgress: @Sendable @escaping (DownloadProgress) -> Void
     ) async throws
 
+    // 위치
+    func setLocation(udid: String, latitude: Double, longitude: Double) async throws
+    func clearLocation(udid: String) async throws
+
     // 디스크
     func devicesDiskUsageBytes() async throws -> Int64
     func deleteUnavailableDevices() async throws

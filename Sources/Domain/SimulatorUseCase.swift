@@ -86,6 +86,16 @@ public final class SimulatorUseCase<Dependency: SimulatorUseCaseDependency>: Sim
         try await dependency.repository.bringSimulatorToFront()
     }
 
+    // MARK: - Location
+
+    public func setLocation(udid: String, latitude: Double, longitude: Double) async throws {
+        try await dependency.repository.setLocation(udid: udid, latitude: latitude, longitude: longitude)
+    }
+
+    public func clearLocation(udid: String) async throws {
+        try await dependency.repository.clearLocation(udid: udid)
+    }
+
     // MARK: - Runtime Management
 
     public func fetchInstalledIOSVersions() async throws -> [InstalledIOSVersion] {

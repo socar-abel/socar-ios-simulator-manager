@@ -15,6 +15,8 @@ struct DeviceDetailView: View {
     @State private var deepLinkURL = ""
     @State private var isEditingName = false
     @State private var editingName = ""
+    @State private var locationLatitude = ""
+    @State private var locationLongitude = ""
 
     private var device: SimulatorDevice? { viewModel.selectedDevice }
 
@@ -27,6 +29,8 @@ struct DeviceDetailView: View {
                         Divider()
                         controls(device)
                         if device.isBooted {
+                            Divider()
+                            locationSection(device)
                             Divider()
                             deepLinkSection(device)
                             Divider()
@@ -152,6 +156,74 @@ struct DeviceDetailView: View {
                     showDeleteConfirmation = true
                 }
             }
+        }
+    }
+
+    // MARK: - Location
+
+    private func locationSection(_ device: SimulatorDevice) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("위치 설정").font(.headline)
+
+            // 프리셋 위치
+            Text("자주 쓰는 위치").font(.subheadline).foregroundStyle(.secondary)
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 140), spacing: 8)], spacing: 8) {
+                ForEach(LocationPreset.all) { preset in
+                    Button {
+                        applyLocation(preset, device: device)
+                    } label: {
+                        HStack(spacing: 6) {
+                            Text(preset.emoji)
+                            Text(preset.name).font(.caption)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 8)
+                        .background(.background.secondary)
+                        .clipShape(RoundedRectangle(cornerRadius: 6))
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+
+            // 직접 입력
+            Text("직접 입력").font(.subheadline).foregroundStyle(.secondary)
+            HStack(spacing: 8) {
+                TextField("위도 (예: 37.5665)", text: $locationLatitude)
+                    .textFieldStyle(.roundedBorder)
+                TextField("경도 (예: 126.9780)", text: $locationLongitude)
+                    .textFieldStyle(.roundedBorder)
+                Button("설정") {
+                    guard let lat = Double(locationLatitude), let lon = Double(locationLongitude) else {
+                        viewModel.errorMessage = "올바른 좌표를 입력해주세요. (예: 37.5665, 126.9780)"
+                        return
+                    }
+                    performAction {
+                        await viewModel.setLocation(udid: device.udid, latitude: lat, longitude: lon)
+                    }
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(locationLatitude.isEmpty || locationLongitude.isEmpty)
+            }
+
+            Button {
+                performAction {
+                    await viewModel.clearLocation(udid: device.udid)
+                }
+            } label: {
+                Label("위치 초기화", systemImage: "location.slash")
+            }
+            .buttonStyle(.bordered)
+
+            Text("시뮬레이터의 GPS 위치를 변경합니다. 쏘카앱의 지도/차량 검색 테스트에 유용합니다.")
+                .font(.caption).foregroundStyle(.tertiary)
+        }
+    }
+
+    private func applyLocation(_ preset: LocationPreset, device: SimulatorDevice) {
+        locationLatitude = String(preset.latitude)
+        locationLongitude = String(preset.longitude)
+        performAction {
+            await viewModel.setLocation(udid: device.udid, latitude: preset.latitude, longitude: preset.longitude)
         }
     }
 
