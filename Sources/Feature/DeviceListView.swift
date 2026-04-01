@@ -315,14 +315,35 @@ public struct DeviceListView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
-            VStack(spacing: 12) {
-                Image(systemName: "hand.tap")
-                    .font(.system(size: 36))
-                    .foregroundStyle(.secondary)
-                Text("디바이스를 선택하세요")
+            VStack(spacing: 16) {
+                Image(systemName: "iphone.radiowaves.left.and.right")
+                    .font(.system(size: 48))
+                    .foregroundStyle(.blue.opacity(0.6))
+                Text("좌측 목록에서 디바이스를 선택하세요")
                     .font(.headline).foregroundStyle(.secondary)
+                VStack(alignment: .leading, spacing: 8) {
+                    guideStep("1", "디바이스를 선택하고 '부팅' 버튼을 누르면 시뮬레이터가 실행됩니다.")
+                    guideStep("2", "'앱 목록에서 설치'를 눌러 SOCAR 앱을 시뮬레이터에 설치합니다.")
+                    guideStep("3", "설치된 앱을 열어 테스트를 시작하세요!")
+                }
+                .padding(16)
+                .background(.background.secondary)
+                .clipShape(RoundedRectangle(cornerRadius: 10))
             }
+            .padding(32)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+    }
+
+    private func guideStep(_ number: String, _ text: String) -> some View {
+        HStack(alignment: .top, spacing: 10) {
+            Text(number)
+                .font(.caption).fontWeight(.bold)
+                .foregroundStyle(.white)
+                .frame(width: 22, height: 22)
+                .background(Circle().fill(.blue))
+            Text(text)
+                .font(.callout).foregroundStyle(.secondary)
         }
     }
 }

@@ -197,6 +197,8 @@ struct DeviceDetailView: View {
                     Text(installProgressMessage).font(.caption).foregroundStyle(.secondary)
                 }
             }
+            Text("💡 '앱 목록'에서 설치하거나, Google Drive에서 다운받은 .app 또는 .zip 파일을 직접 선택할 수 있습니다.")
+                .font(.caption).foregroundStyle(.tertiary)
         }
     }
 
