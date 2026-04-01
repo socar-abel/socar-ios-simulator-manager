@@ -92,20 +92,23 @@ public struct BuildListView: View {
     // MARK: - Guide
 
     private var guideBanner: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "lightbulb.fill")
-                .foregroundStyle(.yellow)
-                .font(.title3)
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Google Drive에서 .app 또는 .zip 파일을 다운로드한 후,")
-                    .font(.callout)
-                Text("'파일 추가' 버튼을 누르거나 이 영역으로 드래그하세요.")
-                    .font(.callout).foregroundStyle(.secondary)
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 6) {
+                Image(systemName: "info.circle.fill").foregroundStyle(.blue)
+                Text("이 탭은 시뮬레이터에 설치할 앱 목록을 관리합니다.")
+                    .font(.callout).fontWeight(.medium)
             }
+            VStack(alignment: .leading, spacing: 4) {
+                Text("• .app 확장자의 파일만 설치 가능합니다. (.zip도 지원)")
+                Text("• Google Drive에 모든 SOCAR Debug 앱 버전이 업로드되고 있습니다. (RC)")
+                Text("• FC 앱 버전이 필요한 경우 iOS 개발자에게 문의해주세요.")
+                Text("• 아래 Google Drive 버튼에서 다운로드한 후 '파일 추가' 또는 드래그하세요.")
+            }
+            .font(.caption).foregroundStyle(.secondary)
         }
-        .padding(12)
+        .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.yellow.opacity(0.06))
+        .background(.blue.opacity(0.04))
         .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 
