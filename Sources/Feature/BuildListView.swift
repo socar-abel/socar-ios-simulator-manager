@@ -133,7 +133,7 @@ public struct BuildListView: View {
             .padding(14)
             .background(
                 RoundedRectangle(cornerRadius: 10)
-                    .fill(.blue.gradient)
+                    .fill(.blue.opacity(0.7).gradient)
             )
         }
         .buttonStyle(.plain)
