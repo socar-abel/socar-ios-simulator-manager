@@ -110,25 +110,33 @@ public struct BuildListView: View {
     }
 
     private var googleDriveSection: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "link")
-                .foregroundStyle(.blue)
-                .font(.title3)
-            VStack(alignment: .leading, spacing: 2) {
-                Button("Google Drive에서 빌드 다운로드") {
-                    if let url = URL(string: "https://drive.google.com/drive/folders/1GC85ktjO9OInB5IEVf7Wzd3laLuTegTs") {
-                        NSWorkspace.shared.open(url)
-                    }
-                }
-                .buttonStyle(.link)
-                Text("권한이 없다면 모바일팀에 문의주세요.")
-                    .font(.caption).foregroundStyle(.tertiary)
+        Button {
+            if let url = URL(string: "https://drive.google.com/drive/folders/1GC85ktjO9OInB5IEVf7Wzd3laLuTegTs") {
+                NSWorkspace.shared.open(url)
             }
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: "arrow.up.right.square.fill")
+                    .foregroundStyle(.white)
+                    .font(.title2)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Google Drive에서 SOCAR 시뮬레이터 앱 다운로드")
+                        .font(.callout).fontWeight(.semibold)
+                        .foregroundStyle(.white)
+                    Text("권한이 없다면 모바일팀에 문의주세요.")
+                        .font(.caption).foregroundStyle(.white.opacity(0.7))
+                }
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .foregroundStyle(.white.opacity(0.6))
+            }
+            .padding(14)
+            .background(
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(.blue.gradient)
+            )
         }
-        .padding(12)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.blue.opacity(0.04))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .buttonStyle(.plain)
     }
 
     // MARK: - Build List
