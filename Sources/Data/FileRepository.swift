@@ -94,13 +94,53 @@ public final class FileRepository: FileRepositoryInterface {
 
     public func copyToBuildDirectory(from source: URL) throws -> URL {
         ensureBuildsDirectoryExists()
-        let destination = buildsDirectory.appendingPathComponent(source.lastPathComponent)
+        _ = source.startAccessingSecurityScopedResource()
+        defer { source.stopAccessingSecurityScopedResource() }
+
+        // .app 파일이면 Info.plist에서 버전 정보를 읽어 이름에 추가
+        let destination = uniqueDestination(for: source)
+
         if FileManager.default.fileExists(atPath: destination.path) {
             try FileManager.default.removeItem(at: destination)
         }
-        _ = source.startAccessingSecurityScopedResource()
-        defer { source.stopAccessingSecurityScopedResource() }
         try FileManager.default.copyItem(at: source, to: destination)
+        return destination
+    }
+
+    /// 같은 이름의 .app이 이미 있으면 버전 정보를 추가하여 구분
+    private func uniqueDestination(for source: URL) -> URL {
+        let baseName = source.deletingPathExtension().lastPathComponent
+        let ext = source.pathExtension
+
+        // Info.plist에서 버전 읽기
+        let plistURL = source.appendingPathComponent("Info.plist")
+        var versionSuffix = ""
+        if let data = try? Data(contentsOf: plistURL),
+           let plist = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any] {
+            let version = plist["CFBundleShortVersionString"] as? String ?? ""
+            let build = plist["CFBundleVersion"] as? String ?? ""
+            if !version.isEmpty {
+                versionSuffix = " (\(version)"
+                if !build.isEmpty && build != version {
+                    versionSuffix += " Build \(build)"
+                }
+                versionSuffix += ")"
+            }
+        }
+
+        let newName = "\(baseName)\(versionSuffix).\(ext)"
+        let destination = buildsDirectory.appendingPathComponent(newName)
+
+        // 그래도 중복이면 숫자 붙이기
+        if FileManager.default.fileExists(atPath: destination.path) {
+            for i in 2...99 {
+                let numberedName = "\(baseName)\(versionSuffix) \(i).\(ext)"
+                let numberedDest = buildsDirectory.appendingPathComponent(numberedName)
+                if !FileManager.default.fileExists(atPath: numberedDest.path) {
+                    return numberedDest
+                }
+            }
+        }
         return destination
     }
 
