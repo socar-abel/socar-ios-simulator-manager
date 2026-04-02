@@ -6,6 +6,7 @@ struct DeviceDetailView: View {
 
     @Bindable var viewModel: DeviceListViewModel
     var buildListViewModel: BuildListViewModel?
+    var onNavigateToBuilds: (() -> Void)?
 
     @State private var isPerformingAction = false
     @State private var showDeleteConfirmation = false
@@ -348,8 +349,12 @@ struct DeviceDetailView: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("앱 설치").font(.headline)
             HStack(spacing: 12) {
-                ActionButton("앱 목록에서 설치", icon: "list.bullet", style: .primary) {
-                    showAppListPicker = true
+                ActionButton("등록된 앱에서 설치하기", icon: "list.bullet", style: .primary) {
+                    if buildListViewModel?.localAppsList.isEmpty == false {
+                        showAppListPicker = true
+                    } else {
+                        onNavigateToBuilds?()
+                    }
                 }
                 ActionButton("파일에서 직접 설치", icon: "folder", style: .secondary) {
                     showFilePicker = true
@@ -361,8 +366,6 @@ struct DeviceDetailView: View {
                     Text(installProgressMessage).font(.caption).foregroundStyle(.secondary)
                 }
             }
-            Text("💡 '앱 설치하기'에서 설치하거나, Google Drive에서 다운받은 .app 또는 .zip 파일을 직접 선택할 수 있습니다.")
-                .font(.caption).foregroundStyle(.tertiary)
         }
     }
 
@@ -423,7 +426,7 @@ struct AppListPickerSheet: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack {
-                Text("앱 목록에서 설치").font(.headline)
+                Text("등록된 앱에서 설치하기").font(.headline)
                 Spacer()
                 Button("취소") { onDismiss() }
                     .buttonStyle(.borderless)

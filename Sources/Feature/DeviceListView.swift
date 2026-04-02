@@ -7,13 +7,15 @@ public struct DeviceListView: View {
     @Bindable var viewModel: DeviceListViewModel
     var buildListViewModel: BuildListViewModel?
     var onNavigateToIOSVersions: (() -> Void)?
+    var onNavigateToBuilds: (() -> Void)?
     @State private var showCreateSheet = false
     @State private var showDeleteSelectedConfirmation = false
 
-    public init(viewModel: DeviceListViewModel, buildListViewModel: BuildListViewModel? = nil, onNavigateToIOSVersions: (() -> Void)? = nil) {
+    public init(viewModel: DeviceListViewModel, buildListViewModel: BuildListViewModel? = nil, onNavigateToIOSVersions: (() -> Void)? = nil, onNavigateToBuilds: (() -> Void)? = nil) {
         self.viewModel = viewModel
         self.buildListViewModel = buildListViewModel
         self.onNavigateToIOSVersions = onNavigateToIOSVersions
+        self.onNavigateToBuilds = onNavigateToBuilds
     }
 
     public var body: some View {
@@ -294,7 +296,7 @@ public struct DeviceListView: View {
     @ViewBuilder
     private var detailPanel: some View {
         if viewModel.selectedDevice != nil, !viewModel.isMultiSelectMode {
-            DeviceDetailView(viewModel: viewModel, buildListViewModel: buildListViewModel)
+            DeviceDetailView(viewModel: viewModel, buildListViewModel: buildListViewModel, onNavigateToBuilds: onNavigateToBuilds)
         } else if viewModel.isMultiSelectMode {
             VStack(spacing: 12) {
                 Image(systemName: "checkmark.circle")

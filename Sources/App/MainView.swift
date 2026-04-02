@@ -86,9 +86,12 @@ struct MainView: View {
         switch coordinator.selectedTab {
         case .devices:
             if let vm = coordinator.deviceListViewModel {
-                DeviceListView(viewModel: vm, buildListViewModel: coordinator.buildListViewModel) {
-                    coordinator.selectedTab = .iosVersions
-                }
+                DeviceListView(
+                    viewModel: vm,
+                    buildListViewModel: coordinator.buildListViewModel,
+                    onNavigateToIOSVersions: { coordinator.selectedTab = .iosVersions },
+                    onNavigateToBuilds: { coordinator.selectedTab = .builds }
+                )
             }
         case .builds:
             if let vm = coordinator.buildListViewModel {
