@@ -361,7 +361,7 @@ struct DeviceDetailView: View {
                     Text(installProgressMessage).font(.caption).foregroundStyle(.secondary)
                 }
             }
-            Text("💡 '앱 목록'에서 설치하거나, Google Drive에서 다운받은 .app 또는 .zip 파일을 직접 선택할 수 있습니다.")
+            Text("💡 '앱 설치하기'에서 설치하거나, Google Drive에서 다운받은 .app 또는 .zip 파일을 직접 선택할 수 있습니다.")
                 .font(.caption).foregroundStyle(.tertiary)
         }
     }
@@ -456,7 +456,7 @@ struct AppListPickerSheet: View {
                         .foregroundStyle(.secondary)
                     Text("앱 목록이 비어있습니다")
                         .font(.headline).foregroundStyle(.secondary)
-                    Text("'앱 목록' 탭에서 먼저 빌드 파일을 추가해주세요.")
+                    Text("'앱 설치하기' 탭에서 먼저 빌드 파일을 추가해주세요.")
                         .font(.caption).foregroundStyle(.tertiary)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
