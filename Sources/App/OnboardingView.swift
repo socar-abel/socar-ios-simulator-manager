@@ -9,6 +9,7 @@ struct OnboardingView: View {
     let status: EnvironmentStatus
     let onRetry: () -> Void
     @State private var isSettingUp = false
+    @State private var setupMessage = ""
 
     var body: some View {
         VStack(spacing: 48) {
@@ -105,9 +106,12 @@ struct OnboardingView: View {
                 }
             } label: {
                 if isSettingUp {
-                    ProgressView()
-                        .controlSize(.small)
-                        .frame(maxWidth: 384, minHeight: 51)
+                    VStack(spacing: 8) {
+                        ProgressView().controlSize(.small)
+                        Text(setupMessage)
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                    .frame(maxWidth: 384, minHeight: 51)
                 } else {
                     Label("준비 완료! 시작하기", systemImage: "checkmark.circle")
                         .font(.title3)
@@ -128,21 +132,25 @@ struct OnboardingView: View {
 
             // 2) Xcode가 한번도 실행된 적 없으면 열어서 라이선스 동의 유도
             if !status.simctlAvailable {
-                let xcodeAppPath = (xcodePath as NSString)
-                    .deletingLastPathComponent  // Contents
-                    .replacingOccurrences(of: "/Contents", with: "")
+                let xcodeAppPath = xcodePath
+                    .replacingOccurrences(of: "/Contents/Developer", with: "")
+                setupMessage = "Xcode를 실행하는 중..."
                 NSWorkspace.shared.open(URL(fileURLWithPath: xcodeAppPath))
 
-                // Xcode 초기 설정 완료 대기 (최대 120초)
-                for _ in 0..<60 {
+                // Xcode 초기 설정 완료 대기 (최대 5분)
+                setupMessage = "Xcode 초기 설정을 기다리는 중... (라이선스 동의 + 컴포넌트 설치)"
+                for i in 0..<150 {
                     try? await Task.sleep(for: .seconds(2))
                     if let result = try? await ShellService.execute(
                         executable: "/usr/bin/xcrun",
                         arguments: ["simctl", "help"],
                         timeout: 5
                     ), result.isSuccess {
+                        setupMessage = "설정 완료!"
                         break
                     }
+                    let elapsed = (i + 1) * 2
+                    setupMessage = "Xcode 초기 설정을 기다리는 중... (\(elapsed)초 경과)"
                 }
             }
         }
