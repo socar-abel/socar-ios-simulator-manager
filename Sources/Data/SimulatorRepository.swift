@@ -463,42 +463,60 @@ public final class SimulatorRepository<Dependency: SimulatorRepositoryDependency
 
     // MARK: - Private
 
-    @MainActor
-    private func shakeSimulatorWindow() {
-        guard let simApp = NSRunningApplication.runningApplications(
-            withBundleIdentifier: "com.apple.iphonesimulator"
-        ).first else { return }
+    private func shakeSimulatorWindow() async {
+        // 접근성 권한 확인 — 없으면 시스템 설정 열기
+        let trusted = AXIsProcessTrustedWithOptions(
+            [kAXTrustedCheckOptionPrompt.takeUnretainedValue(): true] as CFDictionary
+        )
+        guard trusted else { return }
 
-        let pid = simApp.processIdentifier
-        let appElement = AXUIElementCreateApplication(pid)
+        // 메인 스레드를 블로킹하지 않도록 백그라운드에서 실행
+        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+            DispatchQueue.global(qos: .userInteractive).async {
+                guard let simApp = NSRunningApplication.runningApplications(
+                    withBundleIdentifier: "com.apple.iphonesimulator"
+                ).first else {
+                    continuation.resume()
+                    return
+                }
 
-        var windowsRef: CFTypeRef?
-        guard AXUIElementCopyAttributeValue(appElement, kAXWindowsAttribute as CFString, &windowsRef) == .success,
-              let windows = windowsRef as? [AXUIElement],
-              let window = windows.first else { return }
+                let pid = simApp.processIdentifier
+                let appElement = AXUIElementCreateApplication(pid)
 
-        // 현재 위치 읽기
-        var positionRef: CFTypeRef?
-        guard AXUIElementCopyAttributeValue(window, kAXPositionAttribute as CFString, &positionRef) == .success else { return }
-        var origin = CGPoint.zero
-        AXValueGetValue(positionRef as! AXValue, .cgPoint, &origin)
+                var windowsRef: CFTypeRef?
+                guard AXUIElementCopyAttributeValue(appElement, kAXWindowsAttribute as CFString, &windowsRef) == .success,
+                      let windows = windowsRef as? [AXUIElement],
+                      let window = windows.first else {
+                    continuation.resume()
+                    return
+                }
 
-        let d: CGFloat = 14
-        let offsets: [(CGFloat, CGFloat)] = [
-            (-d, 0), (d, 0), (-d, 0), (d, 0), (-d, 0), (d, 0),
-        ]
+                // 현재 위치 읽기
+                var positionRef: CFTypeRef?
+                guard AXUIElementCopyAttributeValue(window, kAXPositionAttribute as CFString, &positionRef) == .success else {
+                    continuation.resume()
+                    return
+                }
+                var origin = CGPoint.zero
+                AXValueGetValue(positionRef as! AXValue, .cgPoint, &origin)
 
-        for (dx, dy) in offsets {
-            var shifted = CGPoint(x: origin.x + dx, y: origin.y + dy)
-            if let val = AXValueCreate(.cgPoint, &shifted) {
-                AXUIElementSetAttributeValue(window, kAXPositionAttribute as CFString, val)
+                let d: CGFloat = 14
+                let offsets: [CGFloat] = [-d, d, -d, d, -d, d]
+
+                for dx in offsets {
+                    var shifted = CGPoint(x: origin.x + dx, y: origin.y)
+                    if let val = AXValueCreate(.cgPoint, &shifted) {
+                        AXUIElementSetAttributeValue(window, kAXPositionAttribute as CFString, val)
+                    }
+                    Thread.sleep(forTimeInterval: 0.04)
+                }
+
+                // 원래 위치로 복귀
+                if let val = AXValueCreate(.cgPoint, &origin) {
+                    AXUIElementSetAttributeValue(window, kAXPositionAttribute as CFString, val)
+                }
+                continuation.resume()
             }
-            Thread.sleep(forTimeInterval: 0.035)
-        }
-
-        // 원래 위치로 복귀
-        if let val = AXValueCreate(.cgPoint, &origin) {
-            AXUIElementSetAttributeValue(window, kAXPositionAttribute as CFString, val)
         }
     }
 
