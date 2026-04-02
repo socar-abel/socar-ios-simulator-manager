@@ -14,139 +14,112 @@ struct OnboardingView: View {
 
     var body: some View {
         ScrollView {
-        VStack(spacing: 48) {
-            Image(systemName: "macbook.and.iphone")
-                .font(.system(size: 96)).foregroundStyle(.blue)
-
-            VStack(spacing: 12) {
-                Text("SOCAR Simulator Manager")
-                    .font(.system(size: 36, weight: .bold))
-
-                Text("환영합니다! 시작하기 전에 간단한 준비가 필요해요.")
-                    .font(.title3).foregroundStyle(.secondary)
-            }
-
-            VStack(alignment: .leading, spacing: 24) {
-                stepRow(
-                    number: 1,
-                    title: "Xcode 설치",
-                    description: "시뮬레이터를 사용하려면 Xcode가 필요해요. (Command Line Tools만으로는 부족합니다)",
-                    isDone: status.xcodeInstalled
-                )
-                stepRow(
-                    number: 2,
-                    title: "Xcode 한 번 실행",
-                    description: "설치 후 Xcode를 한 번 열어서 라이선스 동의 + 초기 설정을 완료해주세요.",
-                    isDone: status.xcodeInstalled && status.simctlAvailable
-                )
-            }
-            .padding(28)
-            .background(.background.secondary)
-            .clipShape(RoundedRectangle(cornerRadius: 16))
-
-            // Xcode는 있지만 simctl이 안 되는 경우 (경로 미설정 또는 라이선스 미동의)
-            if status.xcodeInstalled && !status.simctlAvailable {
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "exclamationmark.triangle.fill")
-                            .foregroundStyle(.orange)
-                        Text("Xcode 초기 설정이 필요합니다")
-                            .font(.body).fontWeight(.medium)
-                    }
-                    Text("Xcode를 한 번 실행해서 라이선스 동의 + 추가 컴포넌트 설치를 완료해주세요.")
-                        .font(.callout).foregroundStyle(.secondary)
-                    Text("이미 했는데 안 되면, 아래 '시작하기' 버튼을 눌러주세요. (자동으로 설정합니다)")
-                        .font(.callout).foregroundStyle(.secondary)
-                    HStack(spacing: 8) {
-                        let cmd = "sudo xcode-select -s \(status.xcodePath ?? "/Applications/Xcode.app/Contents/Developer")"
-                        Text(cmd)
-                            .font(.system(.caption, design: .monospaced))
-                            .foregroundStyle(.primary)
-                            .padding(8)
-                            .background(.background.tertiary)
-                            .clipShape(RoundedRectangle(cornerRadius: 6))
-                        Button {
-                            NSPasteboard.general.clearContents()
-                            NSPasteboard.general.setString(cmd, forType: .string)
-                        } label: {
-                            Label("복사", systemImage: "doc.on.doc")
-                                .font(.caption)
-                        }
-                        .buttonStyle(.bordered)
-                        .controlSize(.small)
-                    }
+            VStack(spacing: 40) {
+                // 헤더
+                VStack(spacing: 12) {
+                    Image(systemName: "macbook.and.iphone")
+                        .font(.system(size: 80)).foregroundStyle(.blue)
+                    Text("SOCAR Simulator Manager")
+                        .font(.system(size: 36, weight: .bold))
+                    Text("환영합니다! 시작하기 전에 간단한 준비가 필요해요.")
+                        .font(.title3).foregroundStyle(.secondary)
                 }
-                .padding(20)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(.orange.opacity(0.06))
-                .clipShape(RoundedRectangle(cornerRadius: 12))
-            }
 
-            if !status.xcodeInstalled {
-                VStack(spacing: 16) {
-                    Button {
-                        NSWorkspace.shared.open(
-                            URL(string: "https://xcodereleases.com")!
+                // 섹션 1: 사전 준비 안내
+                sectionCard(title: "사전 준비 안내", icon: "list.clipboard") {
+                    VStack(alignment: .leading, spacing: 20) {
+                        stepRow(
+                            number: 1,
+                            title: "Xcode 설치",
+                            description: "시뮬레이터를 사용하려면 Xcode가 필요해요. (Command Line Tools만으로는 부족합니다)",
+                            isDone: status.xcodeInstalled
                         )
-                    } label: {
-                        Label("내 macOS에 맞는 Xcode 찾아서 설치", systemImage: "arrow.down.app")
-                            .font(.title3)
-                            .frame(maxWidth: 384, minHeight: 51)
+                        stepRow(
+                            number: 2,
+                            title: "Xcode 한 번 실행",
+                            description: "설치 후 Xcode를 한 번 열어서 라이선스 동의 + 초기 설정을 완료해주세요.",
+                            isDone: status.xcodeInstalled && status.simctlAvailable
+                        )
                     }
-                    .buttonStyle(.borderedProminent).controlSize(.large)
+                }
 
-                    Text("당신의 macOS는 \(ProcessInfo.processInfo.operatingSystemVersionString) 입니다.")
-                        .font(.body).foregroundStyle(.secondary)
+                // 섹션 2: Xcode 설치하기 (Xcode 미설치 시) 또는 초기 설정 안내 (설치 후)
+                if !status.xcodeInstalled {
+                    sectionCard(title: "Xcode 설치하기", icon: "arrow.down.app") {
+                        VStack(spacing: 16) {
+                            Button {
+                                NSWorkspace.shared.open(
+                                    URL(string: "https://xcodereleases.com")!
+                                )
+                            } label: {
+                                Label("내 macOS에 맞는 Xcode 찾아서 설치", systemImage: "safari")
+                                    .font(.title3)
+                                    .frame(maxWidth: 384, minHeight: 48)
+                            }
+                            .buttonStyle(.borderedProminent).controlSize(.large)
 
-                    VStack(spacing: 10) {
-                        Label("다운로드한 .xip 파일을 더블클릭하면 Xcode가 설치됩니다.", systemImage: "1.circle")
-                            .font(.body).foregroundStyle(.secondary)
-                        Label("Xcode가 Downloads 폴더에 있다면, Applications 폴더로 드래그해서 옮겨주세요.", systemImage: "2.circle")
-                            .font(.body).foregroundStyle(.secondary)
+                            Text("당신의 macOS는 \(ProcessInfo.processInfo.operatingSystemVersionString) 입니다.")
+                                .font(.body).foregroundStyle(.secondary)
+
+                            Divider()
+
+                            VStack(alignment: .leading, spacing: 10) {
+                                Label("다운로드한 .xip 파일을 더블클릭하면 Xcode가 설치됩니다.", systemImage: "1.circle")
+                                    .font(.body).foregroundStyle(.secondary)
+                                Label("Xcode가 Downloads 폴더에 있다면, Applications 폴더로 드래그해서 옮겨주세요.", systemImage: "2.circle")
+                                    .font(.body).foregroundStyle(.secondary)
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+
+                            Button {
+                                NSWorkspace.shared.open(URL(fileURLWithPath: "/Applications"))
+                            } label: {
+                                Label("Applications 폴더 열기", systemImage: "folder")
+                                    .font(.callout)
+                            }
+                            .buttonStyle(.bordered).controlSize(.regular)
+                        }
                     }
-                    .padding(20)
-                    .frame(maxWidth: 500)
-                    .background(.background.secondary)
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
-
-                    Button {
-                        NSWorkspace.shared.open(URL(fileURLWithPath: "/Applications"))
-                    } label: {
-                        Label("Applications 폴더 열기", systemImage: "folder")
-                            .font(.callout)
+                } else if !status.simctlAvailable {
+                    sectionCard(title: "Xcode 초기 설정이 필요합니다", icon: "exclamationmark.triangle.fill", iconColor: .orange) {
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text("Xcode를 한 번 실행해서 라이선스 동의 + 추가 컴포넌트 설치를 완료해주세요.")
+                                .font(.body).foregroundStyle(.secondary)
+                            Text("이미 했는데 안 되면, 아래 '시작하기' 버튼을 눌러주세요. (자동으로 설정합니다)")
+                                .font(.body).foregroundStyle(.secondary)
+                        }
                     }
-                    .buttonStyle(.bordered).controlSize(.regular)
+                }
+
+                // 섹션 3: Xcode 설치를 완료하셨나요?
+                sectionCard(title: "Xcode 설치를 완료하셨나요?", icon: "checkmark.seal") {
+                    VStack(spacing: 16) {
+                        Button {
+                            isSettingUp = true
+                            Task { await configureXcodeAndRetry() }
+                        } label: {
+                            if isSettingUp {
+                                ProgressView()
+                                    .controlSize(.small)
+                                    .frame(maxWidth: 384, minHeight: 48)
+                            } else {
+                                Label("준비 완료! 시작하기", systemImage: "checkmark.circle")
+                                    .font(.title3)
+                                    .frame(maxWidth: 384, minHeight: 48)
+                            }
+                        }
+                        .buttonStyle(.borderedProminent).controlSize(.large)
+                        .disabled(isSettingUp)
+
+                        Text("Xcode 설치 후 라이선스 동의를 완료해도 시작이 안된다면,\n이 앱을 종료하고 다시 시작해주세요.")
+                            .font(.callout).foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
+                    }
                 }
             }
-
-            Text("Xcode 설치 후 아래 버튼을 눌러주세요.")
-                .font(.title3).foregroundStyle(.secondary)
-
-            Button {
-                isSettingUp = true
-                Task {
-                    await configureXcodeAndRetry()
-                }
-            } label: {
-                if isSettingUp {
-                    ProgressView()
-                        .controlSize(.small)
-                        .frame(maxWidth: 384, minHeight: 51)
-                } else {
-                    Label("준비 완료! 시작하기", systemImage: "checkmark.circle")
-                        .font(.title3)
-                        .frame(maxWidth: 384, minHeight: 51)
-                }
-            }
-            .buttonStyle(.borderedProminent).controlSize(.large)
-            .disabled(isSettingUp)
-
-            Text("Xcode 설치 후 라이선스 동의를 완료해도 시작이 안된다면,\n이 앱을 종료하고 다시 시작해주세요.")
-                .font(.callout).foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-        }
-        .padding(64)
-        .frame(maxWidth: .infinity)
+            .padding(48)
+            .frame(maxWidth: 700)
+            .frame(maxWidth: .infinity)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .alert("설정 실패", isPresented: $showFailAlert) {
@@ -154,6 +127,28 @@ struct OnboardingView: View {
         } message: {
             Text(failMessage)
         }
+    }
+
+    private func sectionCard<Content: View>(
+        title: String,
+        icon: String,
+        iconColor: Color = .blue,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack(spacing: 8) {
+                Image(systemName: icon)
+                    .foregroundStyle(iconColor)
+                    .font(.title3)
+                Text(title)
+                    .font(.title3).fontWeight(.semibold)
+            }
+            content()
+        }
+        .padding(24)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.background.secondary)
+        .clipShape(RoundedRectangle(cornerRadius: 16))
     }
 
     private func configureXcodeAndRetry() async {
