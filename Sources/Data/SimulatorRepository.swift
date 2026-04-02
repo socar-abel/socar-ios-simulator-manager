@@ -222,13 +222,42 @@ public final class SimulatorRepository<Dependency: SimulatorRepositoryDependency
     }
 
     public func shakeDevice(udid: String) async throws {
-        // 시뮬레이터 내부에 Darwin notification을 보내 shake 이벤트 트리거
+        // 1) 실제 shake 이벤트 전송
         let result = try await dependency.shell.simctlArgs(
             ["spawn", udid, "notifyutil", "-p", "com.apple.UIKit.SimulatorShake"]
         )
         guard result.isSuccess else {
             throw SimulatorRepositoryError.commandFailed(result.stderr)
         }
+
+        // 2) Simulator 창을 물리적으로 흔드는 애니메이션
+        let shakeScript = """
+        tell application "Simulator" to activate
+        delay 0.1
+        tell application "System Events"
+            tell process "Simulator"
+                set frontWindow to front window
+                set {origX, origY} to position of frontWindow
+                set d to 12
+                repeat 3 times
+                    set position of frontWindow to {origX - d, origY}
+                    delay 0.03
+                    set position of frontWindow to {origX + d, origY}
+                    delay 0.03
+                    set position of frontWindow to {origX, origY - d}
+                    delay 0.03
+                    set position of frontWindow to {origX, origY + d}
+                    delay 0.03
+                end repeat
+                set position of frontWindow to {origX, origY}
+            end tell
+        end tell
+        """
+        // 창 흔들기는 실패해도 무시 (접근성 권한 없으면 shake 이벤트만 동작)
+        _ = try? await dependency.shell.run(
+            executable: "/usr/bin/osascript",
+            arguments: ["-e", shakeScript]
+        )
     }
 
     // MARK: - Location
