@@ -290,7 +290,7 @@ struct DeviceDetailView: View {
         ]
 
         if !deepLink.isEmpty {
-            payload["deeplink"] = deepLink
+            payload["land_page"] = deepLink
         }
 
         guard let data = try? JSONSerialization.data(withJSONObject: payload, options: [.prettyPrinted, .sortedKeys]),
