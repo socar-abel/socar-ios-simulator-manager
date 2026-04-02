@@ -222,12 +222,14 @@ public final class SimulatorRepository<Dependency: SimulatorRepositoryDependency
     }
 
     public func shakeDevice(udid: String) async throws {
-        // Simulator 앱을 앞으로 가져온 뒤 Shake Gesture 메뉴(⌃⌘Z) 실행
+        // Simulator 앱을 앞으로 가져온 뒤 Device > Shake 메뉴 클릭
         let script = """
         tell application "Simulator" to activate
         delay 0.3
         tell application "System Events"
-            keystroke "z" using {control down, command down}
+            tell process "Simulator"
+                click menu item "Shake" of menu "Device" of menu bar 1
+            end tell
         end tell
         """
         _ = try await dependency.shell.run(
