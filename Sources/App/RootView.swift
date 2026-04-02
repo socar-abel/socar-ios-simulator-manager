@@ -20,6 +20,7 @@ struct RootView: View {
                 MainView(coordinator: coordinator)
             }
         }
+        .textSelection(.enabled)
         .frame(minWidth: 800, minHeight: 500)
         .task { await coordinator.start() }
     }
