@@ -6,3 +6,5 @@ DerivedData/
 .swiftpm/
 *.xcodeproj/xcuserdata/
 *.xcodeproj/project.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist
+SOCARSimulatorManager.app/
+*.zip
