@@ -26,22 +26,22 @@ struct OnboardingView: View {
                 stepRow(
                     number: 1,
                     title: "Xcode 설치",
-                    description: "시뮬레이터를 사용하려면 Xcode가 필요해요.",
+                    description: "시뮬레이터를 사용하려면 Xcode가 필요해요. (Command Line Tools만으로는 부족합니다)",
                     isDone: status.xcodeInstalled
                 )
                 stepRow(
                     number: 2,
                     title: "Xcode 한 번 실행",
                     description: "설치 후 Xcode를 한 번 열어서 라이선스 동의 + 초기 설정을 완료해주세요.",
-                    isDone: status.xcodeInstalled && status.commandLineToolsInstalled
+                    isDone: status.xcodeInstalled && status.simctlAvailable
                 )
             }
             .padding(28)
             .background(.background.secondary)
             .clipShape(RoundedRectangle(cornerRadius: 16))
 
-            // Xcode는 있지만 CLT 경로가 안 잡힌 경우
-            if status.xcodeInstalled && !status.commandLineToolsInstalled {
+            // Xcode는 있지만 simctl이 안 되는 경우
+            if status.xcodeInstalled && !status.simctlAvailable {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack(spacing: 8) {
                         Image(systemName: "exclamationmark.triangle.fill")

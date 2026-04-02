@@ -10,7 +10,10 @@ public struct EnvironmentRepository: EnvironmentRepositoryInterface {
         guard let result = try? await ShellService.execute(
             executable: "/usr/bin/xcode-select", arguments: ["-p"], timeout: AppConstants.Timeout.environmentShort
         ), result.isSuccess else { return nil }
-        return result.stdout.trimmingCharacters(in: .whitespacesAndNewlines)
+        let path = result.stdout.trimmingCharacters(in: .whitespacesAndNewlines)
+        // Command Line Tools만 설치된 경우 (/Library/Developer/CommandLineTools) 는 Xcode가 아님
+        guard path.contains("Xcode.app") else { return nil }
+        return path
     }
 
     public func findXcodeVersion() async -> String? {
@@ -18,6 +21,14 @@ public struct EnvironmentRepository: EnvironmentRepositoryInterface {
             executable: "/usr/bin/xcodebuild", arguments: ["-version"], timeout: AppConstants.Timeout.environmentShort
         ), result.isSuccess else { return nil }
         return result.stdout.components(separatedBy: "\n").first
+    }
+
+    public func hasDeveloperTools() async -> Bool {
+        // xcode-select -p 가 성공하면 CLT든 Xcode든 뭔가 설치되어 있음
+        guard let result = try? await ShellService.execute(
+            executable: "/usr/bin/xcode-select", arguments: ["-p"], timeout: AppConstants.Timeout.environmentShort
+        ) else { return false }
+        return result.isSuccess
     }
 
     public func isSimctlAvailable() async -> Bool {
