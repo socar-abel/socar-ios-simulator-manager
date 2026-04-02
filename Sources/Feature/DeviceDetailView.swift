@@ -205,15 +205,6 @@ struct DeviceDetailView: View {
                 .disabled(locationLatitude.isEmpty || locationLongitude.isEmpty)
             }
 
-            Button {
-                performAction {
-                    await viewModel.clearLocation(udid: device.udid)
-                }
-            } label: {
-                Label("위치 초기화", systemImage: "location.slash")
-            }
-            .buttonStyle(.bordered)
-
             Text("시뮬레이터의 GPS 위치를 변경합니다. 쏘카앱의 지도/차량 검색 테스트에 유용합니다.")
                 .font(.caption).foregroundStyle(.tertiary)
         }
