@@ -16,19 +16,22 @@ public struct EnvironmentCheckUseCase: Sendable {
 
         async let xcodePath = repository.findXcodePath()
         async let xcodeVersion = repository.findXcodeVersion()
+        async let simctl = repository.isSimctlAvailable()
         async let runtimes = repository.findAvailableRuntimes()
 
         let path = await xcodePath
         let version = await xcodeVersion
+        let simctlAvailable = await simctl
         let runtimeList = await runtimes
 
-        logger.info("Xcode: \(path ?? "nil"), 런타임: \(runtimeList.count)개")
+        logger.info("Xcode: \(path ?? "nil"), simctl: \(simctlAvailable), 런타임: \(runtimeList.count)개")
 
         return EnvironmentStatus(
             xcodeInstalled: path != nil,
             xcodePath: path,
             xcodeVersion: version,
             commandLineToolsInstalled: path != nil,
+            simctlAvailable: simctlAvailable,
             availableRuntimes: runtimeList
         )
     }

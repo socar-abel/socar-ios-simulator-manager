@@ -55,6 +55,7 @@ final class AppContainer {
                 xcodePath: nil,
                 xcodeVersion: nil,
                 commandLineToolsInstalled: false,
+                simctlAvailable: false,
                 availableRuntimes: []
             )
         }

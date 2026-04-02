@@ -20,6 +20,13 @@ public struct EnvironmentRepository: EnvironmentRepositoryInterface {
         return result.stdout.components(separatedBy: "\n").first
     }
 
+    public func isSimctlAvailable() async -> Bool {
+        guard let result = try? await ShellService.execute(
+            executable: "/usr/bin/xcrun", arguments: ["simctl", "help"], timeout: AppConstants.Timeout.environmentShort
+        ) else { return false }
+        return result.isSuccess
+    }
+
     public func findAvailableRuntimes() async -> [String] {
         guard let result = try? await ShellService.execute(
             executable: "/usr/bin/xcrun",
