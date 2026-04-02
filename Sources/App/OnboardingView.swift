@@ -80,32 +80,16 @@ struct OnboardingView: View {
             }
 
             if !status.xcodeInstalled {
-                VStack(spacing: 16) {
-                    Button {
-                        NSWorkspace.shared.open(
-                            URL(string: "macappstore://apps.apple.com/app/xcode/id497799835")!
-                        )
-                    } label: {
-                        Label("App Store에서 Xcode 설치", systemImage: "arrow.down.app")
-                            .font(.title3)
-                            .frame(maxWidth: 384, minHeight: 51)
-                    }
-                    .buttonStyle(.borderedProminent).controlSize(.large)
-
-                    Text("App Store 버전이 호환되지 않는다면?")
-                        .font(.body).foregroundStyle(.secondary)
-
-                    Button {
-                        NSWorkspace.shared.open(
-                            URL(string: "https://xcodereleases.com")!
-                        )
-                    } label: {
-                        Label("내 macOS에 호환되는 버전 찾아서 설치", systemImage: "magnifyingglass")
-                            .font(.title3)
-                            .frame(maxWidth: 384, minHeight: 51)
-                    }
-                    .buttonStyle(.bordered).controlSize(.large)
+                Button {
+                    NSWorkspace.shared.open(
+                        URL(string: "https://xcodereleases.com")!
+                    )
+                } label: {
+                    Label("내 macOS에 맞는 Xcode 찾아서 설치", systemImage: "arrow.down.app")
+                        .font(.title3)
+                        .frame(maxWidth: 384, minHeight: 51)
                 }
+                .buttonStyle(.borderedProminent).controlSize(.large)
             }
 
             Text("Xcode 설치 후 아래 버튼을 눌러주세요.")
