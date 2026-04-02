@@ -13,6 +13,7 @@ struct OnboardingView: View {
     @State private var failMessage = ""
 
     var body: some View {
+        ScrollView {
         VStack(spacing: 48) {
             Image(systemName: "macbook.and.iphone")
                 .font(.system(size: 96)).foregroundStyle(.blue)
@@ -124,6 +125,8 @@ struct OnboardingView: View {
                 .multilineTextAlignment(.center)
         }
         .padding(64)
+        .frame(maxWidth: .infinity)
+        }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .alert("설정 실패", isPresented: $showFailAlert) {
             Button("확인") {}
