@@ -6,12 +6,14 @@ public struct DeviceListView: View {
 
     @Bindable var viewModel: DeviceListViewModel
     var buildListViewModel: BuildListViewModel?
+    var onNavigateToIOSVersions: (() -> Void)?
     @State private var showCreateSheet = false
     @State private var showDeleteSelectedConfirmation = false
 
-    public init(viewModel: DeviceListViewModel, buildListViewModel: BuildListViewModel? = nil) {
+    public init(viewModel: DeviceListViewModel, buildListViewModel: BuildListViewModel? = nil, onNavigateToIOSVersions: (() -> Void)? = nil) {
         self.viewModel = viewModel
         self.buildListViewModel = buildListViewModel
+        self.onNavigateToIOSVersions = onNavigateToIOSVersions
     }
 
     public var body: some View {
@@ -63,7 +65,7 @@ public struct DeviceListView: View {
             onDismissSuccess: { viewModel.dismissSuccess() }
         )
         .sheet(isPresented: $showCreateSheet) {
-            CreateDeviceSheet(viewModel: viewModel)
+            CreateDeviceSheet(viewModel: viewModel, onNavigateToIOSVersions: onNavigateToIOSVersions)
         }
         .toolbar {
             ToolbarItem {

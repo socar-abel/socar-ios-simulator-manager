@@ -83,19 +83,40 @@ struct OnboardingView: View {
             }
 
             if !status.xcodeInstalled {
-                Button {
-                    NSWorkspace.shared.open(
-                        URL(string: "https://xcodereleases.com")!
-                    )
-                } label: {
-                    Label("내 macOS에 맞는 Xcode 찾아서 설치", systemImage: "arrow.down.app")
-                        .font(.title3)
-                        .frame(maxWidth: 384, minHeight: 51)
-                }
-                .buttonStyle(.borderedProminent).controlSize(.large)
+                VStack(spacing: 16) {
+                    Button {
+                        NSWorkspace.shared.open(
+                            URL(string: "https://xcodereleases.com")!
+                        )
+                    } label: {
+                        Label("내 macOS에 맞는 Xcode 찾아서 설치", systemImage: "arrow.down.app")
+                            .font(.title3)
+                            .frame(maxWidth: 384, minHeight: 51)
+                    }
+                    .buttonStyle(.borderedProminent).controlSize(.large)
 
-                Text("당신의 macOS는 \(ProcessInfo.processInfo.operatingSystemVersionString) 입니다.")
-                    .font(.callout).foregroundStyle(.secondary)
+                    Text("당신의 macOS는 \(ProcessInfo.processInfo.operatingSystemVersionString) 입니다.")
+                        .font(.callout).foregroundStyle(.secondary)
+
+                    VStack(alignment: .leading, spacing: 6) {
+                        Label("다운로드한 .xip 파일을 더블클릭하면 Xcode가 설치됩니다.", systemImage: "1.circle")
+                            .font(.callout).foregroundStyle(.secondary)
+                        Label("Xcode가 Downloads 폴더에 있다면, Applications 폴더로 드래그해서 옮겨주세요.", systemImage: "2.circle")
+                            .font(.callout).foregroundStyle(.secondary)
+                    }
+                    .padding(16)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(.background.secondary)
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+
+                    Button {
+                        NSWorkspace.shared.open(URL(fileURLWithPath: "/Applications"))
+                    } label: {
+                        Label("Applications 폴더 열기", systemImage: "folder")
+                            .font(.callout)
+                    }
+                    .buttonStyle(.bordered).controlSize(.regular)
+                }
             }
 
             Text("Xcode 설치 후 아래 버튼을 눌러주세요.")

@@ -5,6 +5,7 @@ import Core
 struct CreateDeviceSheet: View {
 
     @Bindable var viewModel: DeviceListViewModel
+    var onNavigateToIOSVersions: (() -> Void)?
     @Environment(\.dismiss) private var dismiss
 
     @State private var deviceName = ""
@@ -42,9 +43,22 @@ struct CreateDeviceSheet: View {
                         Text("선택하세요").tag(nil as SimulatorDeviceType?)
                         ForEach(iPhoneTypes) { Text($0.name).tag($0 as SimulatorDeviceType?) }
                     }
-                    Picker("iOS 버전", selection: $selectedRuntime) {
-                        Text("선택하세요").tag(nil as SimulatorIOSVersion?)
-                        ForEach(compatibleRuntimes) { Text("\($0.name) (\($0.version))").tag($0 as SimulatorIOSVersion?) }
+                    if compatibleRuntimes.isEmpty {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Label("설치된 iOS 버전이 없습니다", systemImage: "exclamationmark.triangle.fill")
+                                .foregroundStyle(.orange)
+                                .font(.callout)
+                            Button("iOS 버전 설치하러 가기") {
+                                dismiss()
+                                onNavigateToIOSVersions?()
+                            }
+                            .buttonStyle(.borderedProminent).controlSize(.small)
+                        }
+                    } else {
+                        Picker("iOS 버전", selection: $selectedRuntime) {
+                            Text("선택하세요").tag(nil as SimulatorIOSVersion?)
+                            ForEach(compatibleRuntimes) { Text("\($0.name) (\($0.version))").tag($0 as SimulatorIOSVersion?) }
+                        }
                     }
                     if let dt = selectedDeviceType, let minVer = dt.minRuntimeVersionString {
                         Text("최소 지원 iOS 버전: \(minVer)")

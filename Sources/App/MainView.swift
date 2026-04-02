@@ -57,22 +57,26 @@ struct MainView: View {
     private var warningBanner: some View {
         if let warnings = coordinator.environmentStatus?.warnings, !warnings.isEmpty {
             ForEach(warnings, id: \.title) { warning in
-                HStack(spacing: 8) {
+                HStack(spacing: 12) {
                     Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.title2)
                         .foregroundStyle(.orange)
-                    Text(warning.title).font(.callout).fontWeight(.medium)
-                    Text("—").foregroundStyle(.secondary)
-                    Text(warning.description).font(.callout).foregroundStyle(.secondary)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(warning.title).font(.title3).fontWeight(.semibold)
+                        Text(warning.description).font(.callout).foregroundStyle(.secondary)
+                    }
                     Spacer()
                     if case .noRuntimesAvailable = warning {
-                        Button("iOS 버전 탭으로 이동") {
+                        Button("iOS 버전 설치하러 가기") {
                             coordinator.selectedTab = .iosVersions
                         }
-                        .buttonStyle(.bordered).controlSize(.small)
+                        .buttonStyle(.borderedProminent).controlSize(.regular)
                     }
                 }
-                .padding(.horizontal, 16).padding(.vertical, 10)
-                .background(.orange.opacity(0.08))
+                .padding(20)
+                .background(.orange.opacity(0.1))
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+                .padding(.horizontal, 16).padding(.top, 12)
             }
         }
     }
@@ -82,7 +86,9 @@ struct MainView: View {
         switch coordinator.selectedTab {
         case .devices:
             if let vm = coordinator.deviceListViewModel {
-                DeviceListView(viewModel: vm, buildListViewModel: coordinator.buildListViewModel)
+                DeviceListView(viewModel: vm, buildListViewModel: coordinator.buildListViewModel) {
+                    coordinator.selectedTab = .iosVersions
+                }
             }
         case .builds:
             if let vm = coordinator.buildListViewModel {
