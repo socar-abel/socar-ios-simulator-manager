@@ -152,6 +152,9 @@ struct DeviceDetailView: View {
                     ActionButton("화면 보기", icon: "macwindow", style: .primary, isDisabled: isPerformingAction) {
                         performAction { try await viewModel.bringSimulatorToFront() }
                     }
+                    ActionButton("흔들기", icon: "iphone.gen3.radiowaves.left.and.right", style: .secondary, isDisabled: isPerformingAction) {
+                        performAction { await viewModel.shake(udid: device.udid) }
+                    }
                 } else {
                     ActionButton("부팅", icon: "play.fill", style: .primary, isDisabled: isPerformingAction) {
                         performAction { await viewModel.boot(udid: device.udid) }

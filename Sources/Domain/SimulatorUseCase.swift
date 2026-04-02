@@ -86,6 +86,10 @@ public final class SimulatorUseCase<Dependency: SimulatorUseCaseDependency>: Sim
         try await dependency.repository.bringSimulatorToFront()
     }
 
+    public func shakeDevice(udid: String) async throws {
+        try await dependency.repository.shakeDevice(udid: udid)
+    }
+
     // MARK: - Location
 
     public func setLocation(udid: String, latitude: Double, longitude: Double) async throws {

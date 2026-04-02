@@ -147,6 +147,15 @@ public final class DeviceListViewModel {
         try await useCase.bringSimulatorToFront()
     }
 
+    public func shake(udid: String) async {
+        errorMessage = nil
+        do {
+            try await useCase.shakeDevice(udid: udid)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
     public func renameDevice(udid: String, newName: String) async {
         errorMessage = nil
         do {

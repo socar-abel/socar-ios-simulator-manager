@@ -221,6 +221,21 @@ public final class SimulatorRepository<Dependency: SimulatorRepositoryDependency
         )
     }
 
+    public func shakeDevice(udid: String) async throws {
+        // Simulator 앱을 앞으로 가져온 뒤 Shake Gesture 메뉴(⌃⌘Z) 실행
+        let script = """
+        tell application "Simulator" to activate
+        delay 0.3
+        tell application "System Events"
+            keystroke "z" using {control down, command down}
+        end tell
+        """
+        _ = try await dependency.shell.run(
+            executable: "/usr/bin/osascript",
+            arguments: ["-e", script]
+        )
+    }
+
     // MARK: - Location
 
     public func setLocation(udid: String, latitude: Double, longitude: Double) async throws {

@@ -19,6 +19,7 @@ public protocol SimulatorRepositoryInterface: Sendable {
     func loadDeviceTypeProfiles() async throws -> [String: DeviceTypeProfile]
     func listInstalledApps(udid: String) async throws -> Set<String>
     func bringSimulatorToFront() async throws
+    func shakeDevice(udid: String) async throws
 
     // iOS 버전 관리
     func listInstalledIOSVersions() async throws -> [InstalledIOSVersion]

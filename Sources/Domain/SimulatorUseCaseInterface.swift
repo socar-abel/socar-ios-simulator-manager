@@ -17,6 +17,7 @@ public protocol SimulatorUseCaseInterface: Sendable {
     func openURL(udid: String, url: String) async throws
     func isAppInstalled(udid: String, bundleId: String) async throws -> Bool
     func bringSimulatorToFront() async throws
+    func shakeDevice(udid: String) async throws
     func fetchDeviceTypeProfiles() async throws -> [String: DeviceTypeProfile]
 
     // iOS 버전 관리
