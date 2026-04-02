@@ -199,7 +199,7 @@ struct OnboardingView: View {
         }
     }
 
-    // MARK: - Page 3: Xcode 설치를 완료하셨나요?
+    // MARK: - Page 3: Xcode 설치 및 라이선스 동의를 완료하셨나요?
 
     private var page3: some View {
         ScrollView {
@@ -207,7 +207,7 @@ struct OnboardingView: View {
                 HStack(spacing: 8) {
                     Image(systemName: "checkmark.seal")
                         .foregroundStyle(.blue).font(.title3)
-                    Text("Xcode 설치를 완료하셨나요?")
+                    Text("Xcode 설치 및 라이선스 동의를 완료하셨나요?")
                         .font(.title2).fontWeight(.semibold)
                 }
 
