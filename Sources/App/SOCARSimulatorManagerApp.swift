@@ -11,16 +11,8 @@ struct SOCARSimulatorManagerApp: App {
 
     init() {
         NSApplication.shared.setActivationPolicy(.regular)
-        Self.setAppIcon()
         let assembly = AppAssembly()
         _coordinator = State(initialValue: AppContainer(assembly: assembly))
-    }
-
-    private static func setAppIcon() {
-        if let url = Bundle.module.url(forResource: "AppIcon", withExtension: "png"),
-           let image = NSImage(contentsOf: url) {
-            NSApplication.shared.applicationIconImage = image
-        }
     }
 
     var body: some Scene {
