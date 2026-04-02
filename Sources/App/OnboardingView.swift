@@ -8,6 +8,7 @@ struct OnboardingView: View {
 
     let status: EnvironmentStatus
     let onRetry: () -> Void
+    @State private var isSettingUp = false
 
     var body: some View {
         VStack(spacing: 48) {
@@ -109,20 +110,45 @@ struct OnboardingView: View {
                 }
             }
 
-            Text("설치가 완료되면 아래 버튼을 눌러주세요.")
+            Text("Xcode 설치 후 아래 버튼을 눌러주세요.")
                 .font(.title3).foregroundStyle(.secondary)
 
             Button {
-                onRetry()
+                isSettingUp = true
+                Task {
+                    await configureXcodeAndRetry()
+                }
             } label: {
-                Label("준비 완료! 시작하기", systemImage: "checkmark.circle")
-                    .font(.title3)
-                    .frame(maxWidth: 384, minHeight: 51)
+                if isSettingUp {
+                    ProgressView()
+                        .controlSize(.small)
+                        .frame(maxWidth: 384, minHeight: 51)
+                } else {
+                    Label("준비 완료! 시작하기", systemImage: "checkmark.circle")
+                        .font(.title3)
+                        .frame(maxWidth: 384, minHeight: 51)
+                }
             }
-            .buttonStyle(.bordered).controlSize(.large)
+            .buttonStyle(.borderedProminent).controlSize(.large)
+            .disabled(isSettingUp)
         }
         .padding(64)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private func configureXcodeAndRetry() async {
+        // Xcode.app이 있으면 xcode-select -s 를 관리자 권한으로 실행
+        let xcodePath = "/Applications/Xcode.app/Contents/Developer"
+        if FileManager.default.fileExists(atPath: xcodePath) {
+            let script = "do shell script \"xcode-select -s \(xcodePath)\" with administrator privileges"
+            if let appleScript = NSAppleScript(source: script) {
+                var error: NSDictionary?
+                appleScript.executeAndReturnError(&error)
+                // 에러가 나도 (사용자가 취소 등) 그냥 retry로 진행
+            }
+        }
+        isSettingUp = false
+        onRetry()
     }
 
     private func stepRow(number: Int, title: String, description: String, isDone: Bool) -> some View {
