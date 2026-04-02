@@ -122,12 +122,28 @@ struct OnboardingView: View {
     }
 
     private func configureXcodeAndRetry() async {
-        // /Applications 에서 Xcode*.app 을 찾아서 xcode-select -s 실행
         if let xcodePath = findXcodeDevPath() {
-            let script = "do shell script \"xcode-select -s \(xcodePath)\" with administrator privileges"
-            if let appleScript = NSAppleScript(source: script) {
-                var error: NSDictionary?
-                appleScript.executeAndReturnError(&error)
+            // 1) DEVELOPER_DIR 환경변수 설정 — sudo 필요 없이 xcrun simctl 동작
+            setenv("DEVELOPER_DIR", xcodePath, 1)
+
+            // 2) Xcode가 한번도 실행된 적 없으면 열어서 라이선스 동의 유도
+            if !status.simctlAvailable {
+                let xcodeAppPath = (xcodePath as NSString)
+                    .deletingLastPathComponent  // Contents
+                    .replacingOccurrences(of: "/Contents", with: "")
+                NSWorkspace.shared.open(URL(fileURLWithPath: xcodeAppPath))
+
+                // Xcode 초기 설정 완료 대기 (최대 120초)
+                for _ in 0..<60 {
+                    try? await Task.sleep(for: .seconds(2))
+                    if let result = try? await ShellService.execute(
+                        executable: "/usr/bin/xcrun",
+                        arguments: ["simctl", "help"],
+                        timeout: 5
+                    ), result.isSuccess {
+                        break
+                    }
+                }
             }
         }
         isSettingUp = false
@@ -135,11 +151,9 @@ struct OnboardingView: View {
     }
 
     private func findXcodeDevPath() -> String? {
-        // 기본 경로 먼저
         let defaultPath = "/Applications/Xcode.app/Contents/Developer"
         if FileManager.default.fileExists(atPath: defaultPath) { return defaultPath }
 
-        // Xcode*.app 검색
         guard let apps = try? FileManager.default.contentsOfDirectory(atPath: "/Applications") else { return nil }
         for app in apps where app.hasPrefix("Xcode") && app.hasSuffix(".app") {
             let devPath = "/Applications/\(app)/Contents/Developer"

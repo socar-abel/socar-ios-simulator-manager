@@ -23,8 +23,14 @@ public struct EnvironmentCheckUseCase: Sendable {
         let path = await xcodePath
         let version = await xcodeVersion
         let hasDevTools = await devTools
-        let simctlAvailable = await simctl
+        var simctlAvailable = await simctl
         let runtimeList = await runtimes
+
+        // Xcode가 있지만 simctl이 안 되면 DEVELOPER_DIR 설정 후 재시도
+        if path != nil && !simctlAvailable {
+            setenv("DEVELOPER_DIR", path!, 1)
+            simctlAvailable = await repository.isSimctlAvailable()
+        }
 
         logger.info("Xcode: \(path ?? "nil"), devTools: \(hasDevTools), simctl: \(simctlAvailable), 런타임: \(runtimeList.count)개")
 
