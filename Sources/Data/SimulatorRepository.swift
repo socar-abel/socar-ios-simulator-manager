@@ -1,5 +1,4 @@
 import Foundation
-import AppKit
 import Core
 import Domain
 
@@ -231,8 +230,6 @@ public final class SimulatorRepository<Dependency: SimulatorRepositoryDependency
             throw SimulatorRepositoryError.commandFailed(result.stderr)
         }
 
-        // 2) Simulator 창을 물리적으로 흔드는 애니메이션 (접근성 권한 필요)
-        await shakeSimulatorWindow()
     }
 
     // MARK: - Location
@@ -462,63 +459,6 @@ public final class SimulatorRepository<Dependency: SimulatorRepositoryDependency
     }
 
     // MARK: - Private
-
-    private func shakeSimulatorWindow() async {
-        // 접근성 권한 확인 — 없으면 시스템 설정 열기
-        let trusted = AXIsProcessTrustedWithOptions(
-            [kAXTrustedCheckOptionPrompt.takeUnretainedValue(): true] as CFDictionary
-        )
-        guard trusted else { return }
-
-        // 메인 스레드를 블로킹하지 않도록 백그라운드에서 실행
-        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
-            DispatchQueue.global(qos: .userInteractive).async {
-                guard let simApp = NSRunningApplication.runningApplications(
-                    withBundleIdentifier: "com.apple.iphonesimulator"
-                ).first else {
-                    continuation.resume()
-                    return
-                }
-
-                let pid = simApp.processIdentifier
-                let appElement = AXUIElementCreateApplication(pid)
-
-                var windowsRef: CFTypeRef?
-                guard AXUIElementCopyAttributeValue(appElement, kAXWindowsAttribute as CFString, &windowsRef) == .success,
-                      let windows = windowsRef as? [AXUIElement],
-                      let window = windows.first else {
-                    continuation.resume()
-                    return
-                }
-
-                // 현재 위치 읽기
-                var positionRef: CFTypeRef?
-                guard AXUIElementCopyAttributeValue(window, kAXPositionAttribute as CFString, &positionRef) == .success else {
-                    continuation.resume()
-                    return
-                }
-                var origin = CGPoint.zero
-                AXValueGetValue(positionRef as! AXValue, .cgPoint, &origin)
-
-                let d: CGFloat = 14
-                let offsets: [CGFloat] = [-d, d, -d, d, -d, d]
-
-                for dx in offsets {
-                    var shifted = CGPoint(x: origin.x + dx, y: origin.y)
-                    if let val = AXValueCreate(.cgPoint, &shifted) {
-                        AXUIElementSetAttributeValue(window, kAXPositionAttribute as CFString, val)
-                    }
-                    Thread.sleep(forTimeInterval: 0.04)
-                }
-
-                // 원래 위치로 복귀
-                if let val = AXValueCreate(.cgPoint, &origin) {
-                    AXUIElementSetAttributeValue(window, kAXPositionAttribute as CFString, val)
-                }
-                continuation.resume()
-            }
-        }
-    }
 
     private func directorySize(at path: String) -> Int64 {
         let fm = FileManager.default
