@@ -17,7 +17,9 @@ struct DeviceDetailView: View {
     @State private var editingName = ""
     @State private var locationLatitude = ""
     @State private var locationLongitude = ""
-    @State private var customPushPayload = ""
+    @State private var pushTitle = "쏘카"
+    @State private var pushBody = ""
+    @State private var pushDeepLink = ""
 
     private var device: SimulatorDevice? { viewModel.selectedDevice }
 
@@ -227,41 +229,42 @@ struct DeviceDetailView: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("푸시 테스트").font(.headline)
 
-            // 프리셋
-            Text("자주 쓰는 푸시").font(.subheadline).foregroundStyle(.secondary)
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 140), spacing: 8)], spacing: 8) {
-                ForEach(PushPreset.all) { preset in
-                    Button {
-                        sendPresetPush(preset, device: device)
-                    } label: {
-                        HStack(spacing: 6) {
-                            Text(preset.emoji)
-                            Text(preset.name).font(.caption)
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 8)
-                        .background(.background.secondary)
-                        .clipShape(RoundedRectangle(cornerRadius: 6))
-                    }
-                    .buttonStyle(.plain)
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 8) {
+                    Text("타이틀")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .frame(width: 50, alignment: .trailing)
+                    TextField("쏘카", text: $pushTitle)
+                        .textFieldStyle(.roundedBorder)
+                }
+
+                HStack(spacing: 8) {
+                    Text("내용")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .frame(width: 50, alignment: .trailing)
+                    TextField("푸시 알림 내용을 입력하세요", text: $pushBody)
+                        .textFieldStyle(.roundedBorder)
+                }
+
+                HStack(spacing: 8) {
+                    Text("딥링크")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .frame(width: 50, alignment: .trailing)
+                    TextField("socar-v2://path (선택)", text: $pushDeepLink)
+                        .textFieldStyle(.roundedBorder)
                 }
             }
-
-            // 직접 입력
-            Text("직접 입력").font(.subheadline).foregroundStyle(.secondary)
-            TextEditor(text: $customPushPayload)
-                .font(.system(.caption, design: .monospaced))
-                .frame(height: 120)
-                .border(Color.secondary.opacity(0.3))
-                .clipShape(RoundedRectangle(cornerRadius: 6))
 
             HStack {
                 Spacer()
                 Button("전송") {
-                    sendCustomPush(device: device)
+                    sendPush(device: device)
                 }
                 .buttonStyle(.borderedProminent)
-                .disabled(customPushPayload.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isPerformingAction)
+                .disabled(pushBody.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isPerformingAction)
             }
 
             Text("시뮬레이터에 푸시 알림을 전송합니다.")
@@ -271,22 +274,36 @@ struct DeviceDetailView: View {
 
     private let socarBundleIds = ["kr.socar.socarapp.debug", "kr.socar.socarapp"]
 
-    private func sendPresetPush(_ preset: PushPreset, device: SimulatorDevice) {
-        performAction {
-            for bundleId in socarBundleIds {
-                await viewModel.sendPush(
-                    udid: device.udid,
-                    bundleId: bundleId,
-                    payload: preset.payload
-                )
-            }
-            viewModel.successMessage = "푸시 알림이 전송되었습니다."
+    private func buildPushPayload() -> String {
+        let title = pushTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "쏘카" : pushTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+        let body = pushBody.trimmingCharacters(in: .whitespacesAndNewlines)
+        let deepLink = pushDeepLink.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        var payload: [String: Any] = [
+            "aps": [
+                "alert": [
+                    "title": title,
+                    "body": body,
+                ],
+                "sound": "default",
+            ] as [String: Any],
+        ]
+
+        if !deepLink.isEmpty {
+            payload["deeplink"] = deepLink
         }
+
+        guard let data = try? JSONSerialization.data(withJSONObject: payload, options: [.prettyPrinted, .sortedKeys]),
+              let json = String(data: data, encoding: .utf8) else {
+            return "{}"
+        }
+        return json
     }
 
-    private func sendCustomPush(device: SimulatorDevice) {
-        let payload = customPushPayload.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !payload.isEmpty else { return }
+    private func sendPush(device: SimulatorDevice) {
+        let body = pushBody.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !body.isEmpty else { return }
+        let payload = buildPushPayload()
         performAction {
             for bundleId in socarBundleIds {
                 await viewModel.sendPush(
