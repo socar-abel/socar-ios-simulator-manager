@@ -96,16 +96,16 @@ struct OnboardingView: View {
                     .buttonStyle(.borderedProminent).controlSize(.large)
 
                     Text("당신의 macOS는 \(ProcessInfo.processInfo.operatingSystemVersionString) 입니다.")
-                        .font(.callout).foregroundStyle(.secondary)
+                        .font(.body).foregroundStyle(.secondary)
 
-                    VStack(alignment: .leading, spacing: 6) {
+                    VStack(spacing: 10) {
                         Label("다운로드한 .xip 파일을 더블클릭하면 Xcode가 설치됩니다.", systemImage: "1.circle")
-                            .font(.callout).foregroundStyle(.secondary)
+                            .font(.body).foregroundStyle(.secondary)
                         Label("Xcode가 Downloads 폴더에 있다면, Applications 폴더로 드래그해서 옮겨주세요.", systemImage: "2.circle")
-                            .font(.callout).foregroundStyle(.secondary)
+                            .font(.body).foregroundStyle(.secondary)
                     }
-                    .padding(16)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(20)
+                    .frame(maxWidth: 500)
                     .background(.background.secondary)
                     .clipShape(RoundedRectangle(cornerRadius: 10))
 
@@ -142,7 +142,7 @@ struct OnboardingView: View {
             .disabled(isSettingUp)
 
             Text("Xcode 설치 후 라이선스 동의를 완료해도 시작이 안된다면,\n이 앱을 종료하고 다시 시작해주세요.")
-                .font(.caption).foregroundStyle(.tertiary)
+                .font(.callout).foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
         }
         .padding(64)
