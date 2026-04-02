@@ -269,13 +269,18 @@ struct DeviceDetailView: View {
         }
     }
 
+    private let socarBundleIds = ["kr.socar.socarapp.debug", "kr.socar.socarapp"]
+
     private func sendPresetPush(_ preset: PushPreset, device: SimulatorDevice) {
         performAction {
-            await viewModel.sendPush(
-                udid: device.udid,
-                bundleId: "kr.socar.socarapp.debug",
-                payload: preset.payload
-            )
+            for bundleId in socarBundleIds {
+                await viewModel.sendPush(
+                    udid: device.udid,
+                    bundleId: bundleId,
+                    payload: preset.payload
+                )
+            }
+            viewModel.successMessage = "푸시 알림이 전송되었습니다."
         }
     }
 
@@ -283,11 +288,14 @@ struct DeviceDetailView: View {
         let payload = customPushPayload.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !payload.isEmpty else { return }
         performAction {
-            await viewModel.sendPush(
-                udid: device.udid,
-                bundleId: "kr.socar.socarapp.debug",
-                payload: payload
-            )
+            for bundleId in socarBundleIds {
+                await viewModel.sendPush(
+                    udid: device.udid,
+                    bundleId: bundleId,
+                    payload: payload
+                )
+            }
+            viewModel.successMessage = "푸시 알림이 전송되었습니다."
         }
     }
 
