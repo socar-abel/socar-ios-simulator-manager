@@ -164,6 +164,12 @@ public actor ShellService {
         process.standardError = stderrPipe
 
         var env = ProcessInfo.processInfo.environment
+
+        // setenv()로 설정한 값은 ProcessInfo 스냅샷에 반영 안 되므로 직접 읽기
+        if let devDir = getenv("DEVELOPER_DIR") {
+            env["DEVELOPER_DIR"] = String(cString: devDir)
+        }
+
         let extraPaths = ["/usr/bin", "/usr/local/bin", "/opt/homebrew/bin"]
         let currentPath = env["PATH"] ?? ""
         env["PATH"] = (extraPaths + [currentPath]).joined(separator: ":")

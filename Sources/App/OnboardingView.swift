@@ -9,6 +9,8 @@ struct OnboardingView: View {
     let status: EnvironmentStatus
     let onRetry: () -> Void
     @State private var isSettingUp = false
+    @State private var showFailAlert = false
+    @State private var failMessage = ""
 
     var body: some View {
         VStack(spacing: 48) {
@@ -123,32 +125,52 @@ struct OnboardingView: View {
         }
         .padding(64)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .alert("설정 실패", isPresented: $showFailAlert) {
+            Button("확인") {}
+        } message: {
+            Text(failMessage)
+        }
     }
 
     private func configureXcodeAndRetry() async {
-        if let xcodePath = findXcodeDevPath() {
-            // 1) DEVELOPER_DIR 환경변수 설정 — sudo 필요 없이 xcrun simctl 동작
-            setenv("DEVELOPER_DIR", xcodePath, 1)
+        guard let xcodePath = findXcodeDevPath() else {
+            isSettingUp = false
+            failMessage = "Xcode를 찾을 수 없습니다.\n/Applications 폴더에 Xcode를 설치해주세요."
+            showFailAlert = true
+            return
+        }
 
-            // 2) Xcode가 한번도 실행된 적 없으면 열어서 라이선스 동의 유도
-            if !status.simctlAvailable {
-                let xcodeAppPath = xcodePath
-                    .replacingOccurrences(of: "/Contents/Developer", with: "")
-                NSWorkspace.shared.open(URL(fileURLWithPath: xcodeAppPath))
+        // DEVELOPER_DIR 환경변수 설정 — sudo 필요 없이 xcrun simctl 동작
+        setenv("DEVELOPER_DIR", xcodePath, 1)
 
-                // Xcode 초기 설정 완료 대기 (최대 5분)
-                for _ in 0..<150 {
-                    try? await Task.sleep(for: .seconds(2))
-                    if let result = try? await ShellService.execute(
-                        executable: "/usr/bin/xcrun",
-                        arguments: ["simctl", "help"],
-                        timeout: 5
-                    ), result.isSuccess {
-                        break
-                    }
+        // Xcode가 한번도 실행된 적 없으면 열어서 라이선스 동의 유도
+        if !status.simctlAvailable {
+            let xcodeAppPath = xcodePath
+                .replacingOccurrences(of: "/Contents/Developer", with: "")
+            NSWorkspace.shared.open(URL(fileURLWithPath: xcodeAppPath))
+
+            // Xcode 초기 설정 완료 대기 (최대 5분)
+            var simctlReady = false
+            for _ in 0..<150 {
+                try? await Task.sleep(for: .seconds(2))
+                if let result = try? await ShellService.execute(
+                    executable: "/usr/bin/xcrun",
+                    arguments: ["simctl", "help"],
+                    timeout: 5
+                ), result.isSuccess {
+                    simctlReady = true
+                    break
                 }
             }
+
+            if !simctlReady {
+                isSettingUp = false
+                failMessage = "Xcode 초기 설정이 아직 완료되지 않았습니다.\nXcode를 실행하여 라이선스 동의와 추가 컴포넌트 설치를 완료한 후, 이 앱을 다시 시작해주세요."
+                showFailAlert = true
+                return
+            }
         }
+
         isSettingUp = false
         onRetry()
     }
