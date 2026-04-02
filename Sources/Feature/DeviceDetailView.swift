@@ -35,9 +35,9 @@ struct DeviceDetailView: View {
                             Divider()
                             locationSection(device)
                             Divider()
-                            pushTestSection(device)
-                            Divider()
                             deepLinkSection(device)
+                            Divider()
+                            pushTestSection(device)
                             Divider()
                             appManagement(device)
                         }
