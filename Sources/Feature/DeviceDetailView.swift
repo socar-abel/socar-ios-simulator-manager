@@ -30,6 +30,8 @@ struct DeviceDetailView: View {
                     VStack(alignment: .leading, spacing: 24) {
                         header(device)
                         Divider()
+                        appInstall(device)
+                        Divider()
                         controls(device)
                         if device.isBooted {
                             Divider()
@@ -38,8 +40,6 @@ struct DeviceDetailView: View {
                             deepLinkSection(device)
                             Divider()
                             pushTestSection(device)
-                            Divider()
-                            appManagement(device)
                         }
                         Divider()
                         info(device)
@@ -344,9 +344,9 @@ struct DeviceDetailView: View {
         }
     }
 
-    private func appManagement(_ device: SimulatorDevice) -> some View {
+    private func appInstall(_ device: SimulatorDevice) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("앱 관리").font(.headline)
+            Text("앱 설치").font(.headline)
             HStack(spacing: 12) {
                 ActionButton("앱 목록에서 설치", icon: "list.bullet", style: .primary) {
                     showAppListPicker = true
