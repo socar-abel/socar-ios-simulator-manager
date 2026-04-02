@@ -1,4 +1,5 @@
 import Foundation
+import AppKit
 import Core
 import Domain
 
@@ -230,34 +231,8 @@ public final class SimulatorRepository<Dependency: SimulatorRepositoryDependency
             throw SimulatorRepositoryError.commandFailed(result.stderr)
         }
 
-        // 2) Simulator 창을 물리적으로 흔드는 애니메이션
-        let shakeScript = """
-        tell application "Simulator" to activate
-        delay 0.1
-        tell application "System Events"
-            tell process "Simulator"
-                set frontWindow to front window
-                set {origX, origY} to position of frontWindow
-                set d to 12
-                repeat 3 times
-                    set position of frontWindow to {origX - d, origY}
-                    delay 0.03
-                    set position of frontWindow to {origX + d, origY}
-                    delay 0.03
-                    set position of frontWindow to {origX, origY - d}
-                    delay 0.03
-                    set position of frontWindow to {origX, origY + d}
-                    delay 0.03
-                end repeat
-                set position of frontWindow to {origX, origY}
-            end tell
-        end tell
-        """
-        // 창 흔들기는 실패해도 무시 (접근성 권한 없으면 shake 이벤트만 동작)
-        _ = try? await dependency.shell.run(
-            executable: "/usr/bin/osascript",
-            arguments: ["-e", shakeScript]
-        )
+        // 2) Simulator 창을 물리적으로 흔드는 애니메이션 (접근성 권한 필요)
+        await shakeSimulatorWindow()
     }
 
     // MARK: - Location
@@ -487,6 +462,45 @@ public final class SimulatorRepository<Dependency: SimulatorRepositoryDependency
     }
 
     // MARK: - Private
+
+    @MainActor
+    private func shakeSimulatorWindow() {
+        guard let simApp = NSRunningApplication.runningApplications(
+            withBundleIdentifier: "com.apple.iphonesimulator"
+        ).first else { return }
+
+        let pid = simApp.processIdentifier
+        let appElement = AXUIElementCreateApplication(pid)
+
+        var windowsRef: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(appElement, kAXWindowsAttribute as CFString, &windowsRef) == .success,
+              let windows = windowsRef as? [AXUIElement],
+              let window = windows.first else { return }
+
+        // 현재 위치 읽기
+        var positionRef: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(window, kAXPositionAttribute as CFString, &positionRef) == .success else { return }
+        var origin = CGPoint.zero
+        AXValueGetValue(positionRef as! AXValue, .cgPoint, &origin)
+
+        let d: CGFloat = 14
+        let offsets: [(CGFloat, CGFloat)] = [
+            (-d, 0), (d, 0), (-d, 0), (d, 0), (-d, 0), (d, 0),
+        ]
+
+        for (dx, dy) in offsets {
+            var shifted = CGPoint(x: origin.x + dx, y: origin.y + dy)
+            if let val = AXValueCreate(.cgPoint, &shifted) {
+                AXUIElementSetAttributeValue(window, kAXPositionAttribute as CFString, val)
+            }
+            Thread.sleep(forTimeInterval: 0.035)
+        }
+
+        // 원래 위치로 복귀
+        if let val = AXValueCreate(.cgPoint, &origin) {
+            AXUIElementSetAttributeValue(window, kAXPositionAttribute as CFString, val)
+        }
+    }
 
     private func directorySize(at path: String) -> Int64 {
         let fm = FileManager.default
