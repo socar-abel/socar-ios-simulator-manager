@@ -24,7 +24,7 @@ struct MainView: View {
         List(selection: $coordinator.selectedTab) {
             Label("디바이스", systemImage: "iphone")
                 .tag(AppRoute.devices)
-            Label("앱 설치하기", systemImage: "shippingbox")
+            Label("앱 등록 및 설치", systemImage: "shippingbox")
                 .tag(AppRoute.builds)
             Label("iOS 버전", systemImage: "cpu")
                 .tag(AppRoute.iosVersions)

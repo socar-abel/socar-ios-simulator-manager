@@ -12,6 +12,7 @@ struct DeviceDetailView: View {
     @State private var showDeleteConfirmation = false
     @State private var showFilePicker = false
     @State private var showAppListPicker = false
+    @State private var showNoAppsAlert = false
     @State private var installProgressMessage = ""
     @State private var deepLinkURL = ""
     @State private var isEditingName = false
@@ -62,6 +63,12 @@ struct DeviceDetailView: View {
                     showAppListPicker = false
                 }
             }
+        }
+        .alert("등록된 앱이 없습니다", isPresented: $showNoAppsAlert) {
+            Button("앱 등록하러 가기") { onNavigateToBuilds?() }
+            Button("취소", role: .cancel) {}
+        } message: {
+            Text("앱을 먼저 등록해주세요.")
         }
         .confirmationDialog(
             "'\(device?.name ?? "")' 디바이스를 삭제하시겠습니까?",
@@ -353,7 +360,7 @@ struct DeviceDetailView: View {
                     if buildListViewModel?.localAppsList.isEmpty == false {
                         showAppListPicker = true
                     } else {
-                        onNavigateToBuilds?()
+                        showNoAppsAlert = true
                     }
                 }
                 ActionButton("파일에서 직접 설치", icon: "folder", style: .secondary) {
@@ -457,9 +464,9 @@ struct AppListPickerSheet: View {
                     Image(systemName: "app.dashed")
                         .font(.system(size: 36))
                         .foregroundStyle(.secondary)
-                    Text("앱 목록이 비어있습니다")
+                    Text("등록된 앱이 없습니다")
                         .font(.headline).foregroundStyle(.secondary)
-                    Text("'앱 설치하기' 탭에서 먼저 빌드 파일을 추가해주세요.")
+                    Text("'앱 등록 및 설치' 탭에서 앱을 먼저 등록해주세요.")
                         .font(.caption).foregroundStyle(.tertiary)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
