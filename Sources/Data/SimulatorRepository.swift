@@ -224,7 +224,7 @@ public final class SimulatorRepository<Dependency: SimulatorRepositoryDependency
     public func shakeDevice(udid: String) async throws {
         // 시뮬레이터 내부에 Darwin notification을 보내 shake 이벤트 트리거
         let result = try await dependency.shell.simctlArgs(
-            ["spawn", udid, "notifyutil", "-p", "com.apple.UIKit.simulatorShake"]
+            ["spawn", udid, "notifyutil", "-p", "com.apple.UIKit.SimulatorShake"]
         )
         guard result.isSuccess else {
             throw SimulatorRepositoryError.commandFailed(result.stderr)
