@@ -239,6 +239,24 @@ public final class SimulatorRepository<Dependency: SimulatorRepositoryDependency
         }
     }
 
+    // MARK: - Push Notification
+
+    public func sendPushNotification(udid: String, bundleId: String, payload: String) async throws {
+        let tempFile = FileManager.default.temporaryDirectory
+            .appendingPathComponent("push_\(UUID().uuidString).json")
+        defer { try? FileManager.default.removeItem(at: tempFile) }
+
+        guard let data = payload.data(using: .utf8) else {
+            throw SimulatorRepositoryError.commandFailed("잘못된 페이로드 형식입니다.")
+        }
+        try data.write(to: tempFile)
+
+        let result = try await dependency.shell.simctlArgs(["push", udid, bundleId, tempFile.path])
+        guard result.isSuccess else {
+            throw SimulatorRepositoryError.commandFailed(result.stderr)
+        }
+    }
+
     // MARK: - Runtime Management
 
     public func listInstalledIOSVersions() async throws -> [InstalledIOSVersion] {

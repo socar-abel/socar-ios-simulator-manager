@@ -34,6 +34,9 @@ public protocol SimulatorUseCaseInterface: Sendable {
     func setLocation(udid: String, latitude: Double, longitude: Double) async throws
     func clearLocation(udid: String) async throws
 
+    // 푸시 알림
+    func sendPushNotification(udid: String, bundleId: String, payload: String) async throws
+
     // 디스크
     func fetchDiskUsage() async throws -> DiskUsage
     func deleteAllUnavailableDevices() async throws

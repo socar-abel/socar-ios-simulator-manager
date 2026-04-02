@@ -170,6 +170,18 @@ public final class DeviceListViewModel {
         }
     }
 
+    // MARK: - Push Notification
+
+    public func sendPush(udid: String, bundleId: String, payload: String) async {
+        errorMessage = nil
+        do {
+            try await useCase.sendPushNotification(udid: udid, bundleId: bundleId, payload: payload)
+            successMessage = "푸시 알림이 전송되었습니다."
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
     public func clearLocation(udid: String) async {
         errorMessage = nil
         do {

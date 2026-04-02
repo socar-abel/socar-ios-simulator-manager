@@ -96,6 +96,12 @@ public final class SimulatorUseCase<Dependency: SimulatorUseCaseDependency>: Sim
         try await dependency.repository.clearLocation(udid: udid)
     }
 
+    // MARK: - Push Notification
+
+    public func sendPushNotification(udid: String, bundleId: String, payload: String) async throws {
+        try await dependency.repository.sendPushNotification(udid: udid, bundleId: bundleId, payload: payload)
+    }
+
     // MARK: - Runtime Management
 
     public func fetchInstalledIOSVersions() async throws -> [InstalledIOSVersion] {

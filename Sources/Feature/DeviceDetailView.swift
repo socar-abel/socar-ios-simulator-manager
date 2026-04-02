@@ -17,6 +17,7 @@ struct DeviceDetailView: View {
     @State private var editingName = ""
     @State private var locationLatitude = ""
     @State private var locationLongitude = ""
+    @State private var customPushPayload = ""
 
     private var device: SimulatorDevice? { viewModel.selectedDevice }
 
@@ -31,6 +32,8 @@ struct DeviceDetailView: View {
                         if device.isBooted {
                             Divider()
                             locationSection(device)
+                            Divider()
+                            pushTestSection(device)
                             Divider()
                             deepLinkSection(device)
                             Divider()
@@ -215,6 +218,76 @@ struct DeviceDetailView: View {
         locationLongitude = String(preset.longitude)
         performAction {
             await viewModel.setLocation(udid: device.udid, latitude: preset.latitude, longitude: preset.longitude)
+        }
+    }
+
+    // MARK: - Push Test
+
+    private func pushTestSection(_ device: SimulatorDevice) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("푸시 테스트").font(.headline)
+
+            // 프리셋
+            Text("자주 쓰는 푸시").font(.subheadline).foregroundStyle(.secondary)
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 140), spacing: 8)], spacing: 8) {
+                ForEach(PushPreset.all) { preset in
+                    Button {
+                        sendPresetPush(preset, device: device)
+                    } label: {
+                        HStack(spacing: 6) {
+                            Text(preset.emoji)
+                            Text(preset.name).font(.caption)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 8)
+                        .background(.background.secondary)
+                        .clipShape(RoundedRectangle(cornerRadius: 6))
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+
+            // 직접 입력
+            Text("직접 입력").font(.subheadline).foregroundStyle(.secondary)
+            TextEditor(text: $customPushPayload)
+                .font(.system(.caption, design: .monospaced))
+                .frame(height: 120)
+                .border(Color.secondary.opacity(0.3))
+                .clipShape(RoundedRectangle(cornerRadius: 6))
+
+            HStack {
+                Spacer()
+                Button("전송") {
+                    sendCustomPush(device: device)
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(customPushPayload.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isPerformingAction)
+            }
+
+            Text("시뮬레이터에 푸시 알림을 전송합니다.")
+                .font(.caption).foregroundStyle(.tertiary)
+        }
+    }
+
+    private func sendPresetPush(_ preset: PushPreset, device: SimulatorDevice) {
+        performAction {
+            await viewModel.sendPush(
+                udid: device.udid,
+                bundleId: "kr.socar.socarapp.debug",
+                payload: preset.payload
+            )
+        }
+    }
+
+    private func sendCustomPush(device: SimulatorDevice) {
+        let payload = customPushPayload.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !payload.isEmpty else { return }
+        performAction {
+            await viewModel.sendPush(
+                udid: device.udid,
+                bundleId: "kr.socar.socarapp.debug",
+                payload: payload
+            )
         }
     }
 
