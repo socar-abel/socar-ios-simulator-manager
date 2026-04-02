@@ -18,7 +18,9 @@ public struct BuildListView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
                 guideBanner
+                Divider()
                 googleDriveSection
+                Divider()
                 header
                 buildList
             }
@@ -80,7 +82,7 @@ public struct BuildListView: View {
             HStack(spacing: 6) {
                 Image(systemName: "info.circle.fill").foregroundStyle(.blue)
                 Text("이곳에서 시뮬레이터에 설치할 앱 목록을 관리합니다.")
-                    .font(.callout).fontWeight(.medium)
+                    .font(.title3).fontWeight(.medium)
             }
             VStack(alignment: .leading, spacing: 4) {
                 Text("• .app 확장자의 파일만 설치 가능합니다.")
@@ -88,7 +90,7 @@ public struct BuildListView: View {
                 Text("• FC 앱 버전이 필요한 경우 iOS 개발자에게 문의해주세요.")
                 Text("• 아래 Google Drive 버튼에서 다운로드한 후 '파일 추가' 또는 드래그하세요.")
             }
-            .font(.caption).foregroundStyle(.secondary)
+            .font(.callout).foregroundStyle(.secondary)
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
