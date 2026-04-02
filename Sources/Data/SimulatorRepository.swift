@@ -222,20 +222,13 @@ public final class SimulatorRepository<Dependency: SimulatorRepositoryDependency
     }
 
     public func shakeDevice(udid: String) async throws {
-        // Simulator 앱을 앞으로 가져온 뒤 Device > Shake 메뉴 클릭
-        let script = """
-        tell application "Simulator" to activate
-        delay 0.3
-        tell application "System Events"
-            tell process "Simulator"
-                click menu item "Shake" of menu "Device" of menu bar 1
-            end tell
-        end tell
-        """
-        _ = try await dependency.shell.run(
-            executable: "/usr/bin/osascript",
-            arguments: ["-e", script]
+        // 시뮬레이터 내부에 Darwin notification을 보내 shake 이벤트 트리거
+        let result = try await dependency.shell.simctlArgs(
+            ["spawn", udid, "notifyutil", "-p", "com.apple.UIKit.simulatorShake"]
         )
+        guard result.isSuccess else {
+            throw SimulatorRepositoryError.commandFailed(result.stderr)
+        }
     }
 
     // MARK: - Location
