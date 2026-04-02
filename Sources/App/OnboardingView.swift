@@ -90,6 +90,9 @@ struct OnboardingView: View {
                         .frame(maxWidth: 384, minHeight: 51)
                 }
                 .buttonStyle(.borderedProminent).controlSize(.large)
+
+                Text("당신의 macOS는 \(ProcessInfo.processInfo.operatingSystemVersionString) 입니다.")
+                    .font(.callout).foregroundStyle(.secondary)
             }
 
             Text("Xcode 설치 후 아래 버튼을 눌러주세요.")
