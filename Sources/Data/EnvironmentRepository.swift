@@ -7,13 +7,36 @@ public struct EnvironmentRepository: EnvironmentRepositoryInterface {
     public init() {}
 
     public func findXcodePath() async -> String? {
-        guard let result = try? await ShellService.execute(
+        // 1) xcode-select -p 결과 확인
+        let selectResult = try? await ShellService.execute(
             executable: "/usr/bin/xcode-select", arguments: ["-p"], timeout: AppConstants.Timeout.environmentShort
-        ), result.isSuccess else { return nil }
-        let path = result.stdout.trimmingCharacters(in: .whitespacesAndNewlines)
-        // Command Line Tools만 설치된 경우 (/Library/Developer/CommandLineTools) 는 Xcode가 아님
-        guard path.contains("Xcode.app") else { return nil }
-        return path
+        )
+        let selectedPath = selectResult?.isSuccess == true
+            ? selectResult!.stdout.trimmingCharacters(in: .whitespacesAndNewlines)
+            : nil
+
+        // 2) xcode-select가 Xcode.app을 가리키면 그대로 사용
+        if let selectedPath, selectedPath.contains("Xcode") && selectedPath.contains(".app") {
+            return selectedPath
+        }
+
+        // 3) 기본 경로에 Xcode.app이 있는지 확인
+        let defaultPath = "/Applications/Xcode.app/Contents/Developer"
+        if FileManager.default.fileExists(atPath: defaultPath) {
+            return defaultPath
+        }
+
+        // 4) /Applications 에서 Xcode*.app 검색
+        if let apps = try? FileManager.default.contentsOfDirectory(atPath: "/Applications") {
+            for app in apps where app.hasPrefix("Xcode") && app.hasSuffix(".app") {
+                let devPath = "/Applications/\(app)/Contents/Developer"
+                if FileManager.default.fileExists(atPath: devPath) {
+                    return devPath
+                }
+            }
+        }
+
+        return nil
     }
 
     public func findXcodeVersion() async -> String? {

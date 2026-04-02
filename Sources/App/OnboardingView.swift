@@ -41,21 +41,22 @@ struct OnboardingView: View {
             .background(.background.secondary)
             .clipShape(RoundedRectangle(cornerRadius: 16))
 
-            // Xcode는 있지만 simctl이 안 되는 경우
+            // Xcode는 있지만 simctl이 안 되는 경우 (경로 미설정 또는 라이선스 미동의)
             if status.xcodeInstalled && !status.simctlAvailable {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack(spacing: 8) {
                         Image(systemName: "exclamationmark.triangle.fill")
                             .foregroundStyle(.orange)
-                        Text("Xcode 경로 설정이 필요합니다")
+                        Text("Xcode 초기 설정이 필요합니다")
                             .font(.body).fontWeight(.medium)
                     }
-                    Text("Xcode를 한 번 실행해서 초기 설정을 완료해주세요.")
+                    Text("Xcode를 한 번 실행해서 라이선스 동의 + 추가 컴포넌트 설치를 완료해주세요.")
                         .font(.callout).foregroundStyle(.secondary)
-                    Text("그래도 안 되면 터미널에서 아래 명령어를 실행해주세요:")
+                    Text("이미 했는데 안 되면, 아래 '시작하기' 버튼을 눌러주세요. (자동으로 설정합니다)")
                         .font(.callout).foregroundStyle(.secondary)
                     HStack(spacing: 8) {
-                        Text("sudo xcode-select -s /Applications/Xcode.app/Contents/Developer")
+                        let cmd = "sudo xcode-select -s \(status.xcodePath ?? "/Applications/Xcode.app/Contents/Developer")"
+                        Text(cmd)
                             .font(.system(.caption, design: .monospaced))
                             .foregroundStyle(.primary)
                             .padding(8)
@@ -63,10 +64,7 @@ struct OnboardingView: View {
                             .clipShape(RoundedRectangle(cornerRadius: 6))
                         Button {
                             NSPasteboard.general.clearContents()
-                            NSPasteboard.general.setString(
-                                "sudo xcode-select -s /Applications/Xcode.app/Contents/Developer",
-                                forType: .string
-                            )
+                            NSPasteboard.general.setString(cmd, forType: .string)
                         } label: {
                             Label("복사", systemImage: "doc.on.doc")
                                 .font(.caption)
@@ -137,18 +135,30 @@ struct OnboardingView: View {
     }
 
     private func configureXcodeAndRetry() async {
-        // Xcode.app이 있으면 xcode-select -s 를 관리자 권한으로 실행
-        let xcodePath = "/Applications/Xcode.app/Contents/Developer"
-        if FileManager.default.fileExists(atPath: xcodePath) {
+        // /Applications 에서 Xcode*.app 을 찾아서 xcode-select -s 실행
+        if let xcodePath = findXcodeDevPath() {
             let script = "do shell script \"xcode-select -s \(xcodePath)\" with administrator privileges"
             if let appleScript = NSAppleScript(source: script) {
                 var error: NSDictionary?
                 appleScript.executeAndReturnError(&error)
-                // 에러가 나도 (사용자가 취소 등) 그냥 retry로 진행
             }
         }
         isSettingUp = false
         onRetry()
+    }
+
+    private func findXcodeDevPath() -> String? {
+        // 기본 경로 먼저
+        let defaultPath = "/Applications/Xcode.app/Contents/Developer"
+        if FileManager.default.fileExists(atPath: defaultPath) { return defaultPath }
+
+        // Xcode*.app 검색
+        guard let apps = try? FileManager.default.contentsOfDirectory(atPath: "/Applications") else { return nil }
+        for app in apps where app.hasPrefix("Xcode") && app.hasSuffix(".app") {
+            let devPath = "/Applications/\(app)/Contents/Developer"
+            if FileManager.default.fileExists(atPath: devPath) { return devPath }
+        }
+        return nil
     }
 
     private func stepRow(number: Int, title: String, description: String, isDone: Bool) -> some View {
