@@ -22,7 +22,7 @@ struct SOCARSimulatorManagerApp: App {
                     NSApplication.shared.activate(ignoringOtherApps: true)
                 }
         }
-        .defaultSize(width: 1100, height: 900)
+        .defaultSize(width: 1100, height: 1200)
 
         Settings {
             if let vm = coordinator.settingsViewModel {
